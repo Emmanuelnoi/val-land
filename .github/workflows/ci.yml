@@ -14,6 +14,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Use npm 11
+        run: npm install -g npm@11
       - name: Install
         run: npm ci
       - name: Typecheck
@@ -35,6 +37,8 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - name: Use npm 11
+        run: npm install -g npm@11
       - name: Install
         run: npm ci
       - name: Vercel Pull
