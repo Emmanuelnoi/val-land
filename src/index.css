@@ -143,6 +143,27 @@
   .skip-link:focus-visible {
     transform: translateY(0);
   }
+
+  .confetti-layer {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 40;
+  }
+
+  .confetti-piece {
+    position: absolute;
+    top: -12%;
+    left: var(--x, 50%);
+    width: var(--size, 10px);
+    height: calc(var(--size, 10px) * 0.55);
+    background: var(--color, #f05d88);
+    border-radius: 3px;
+    opacity: 0;
+    transform: translateY(-10%) rotate(var(--rot, 0deg));
+    animation: confetti-fall var(--duration, 1500ms) ease-out var(--delay, 0ms) forwards;
+  }
 }
 
 @layer utilities {
@@ -190,8 +211,23 @@
     .valentine-card,
     .input-shell,
     .link-soft,
-    .skip-link {
+    .skip-link,
+    .confetti-piece {
       transition: none !important;
+    }
+  }
+
+  @keyframes confetti-fall {
+    0% {
+      opacity: 0;
+      transform: translateY(-10%) rotate(0deg);
+    }
+    10% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(110vh) rotate(240deg);
     }
   }
 }

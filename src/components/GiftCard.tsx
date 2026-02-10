@@ -1,4 +1,3 @@
-import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faGift, faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import type { Gift } from '../data/gifts';

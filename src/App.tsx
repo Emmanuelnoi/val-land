@@ -4,6 +4,7 @@ import {
   faHeart,
   faXmark,
   faArrowRight,
+  faArrowUpRightFromSquare,
   faGift,
   faTriangleExclamation,
   faRotateLeft
@@ -23,6 +24,7 @@ import {
   getNextAttemptDelayMs,
   readSubmissionQueue
 } from './lib/submission-queue';
+import { incrementStat } from './lib/analytics';
 
 type AppState =
   | { view: 'ASK'; name: string }
@@ -41,6 +43,38 @@ type Action =
   | { type: 'RESET' };
 
 const initialState: AppState = { view: 'ASK', name: recipientName };
+
+type ConfettiPiece = {
+  id: string;
+  x: number;
+  size: number;
+  delay: number;
+  duration: number;
+  rotate: number;
+  color: string;
+};
+
+type ConfettiBurst = {
+  id: string;
+  pieces: ConfettiPiece[];
+};
+
+const CONFETTI_COLORS = ['#FF90B3', '#F05D88', '#FFD4B2', '#FFE7F0', '#D94873'];
+
+function createConfettiBurst(): ConfettiBurst {
+  const burstId = `burst_${Math.random().toString(16).slice(2)}`;
+  const pieces = Array.from({ length: 18 }).map((_, index) => ({
+    id: `${burstId}_${index}`,
+    x: Math.round(10 + Math.random() * 80),
+    size: Math.round(6 + Math.random() * 6),
+    delay: Math.round(Math.random() * 200),
+    duration: Math.round(1100 + Math.random() * 700),
+    rotate: Math.round(Math.random() * 360),
+    color: CONFETTI_COLORS[index % CONFETTI_COLORS.length]
+  }));
+
+  return { id: burstId, pieces };
+}
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -87,8 +121,11 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [noIsYes, setNoIsYes] = useState(false);
   const [noWiggle, setNoWiggle] = useState(false);
+  const [shareMessage, setShareMessage] = useState<string | null>(null);
+  const [confettiBursts, setConfettiBursts] = useState<ConfettiBurst[]>([]);
   const drainTimerRef = useRef<number | null>(null);
   const drainingRef = useRef(false);
+  const shareTimerRef = useRef<number | null>(null);
 
   const scheduleDrain = (delayMs: number | null) => {
     if (delayMs == null) return;
@@ -119,11 +156,72 @@ export default function App() {
     scheduleDrain(getNextAttemptDelayMs(entries));
   };
 
+  const triggerConfetti = () => {
+    const burst = createConfettiBurst();
+    setConfettiBursts((prev) => [...prev, burst]);
+    window.setTimeout(() => {
+      setConfettiBursts((prev) => prev.filter((item) => item.id !== burst.id));
+    }, 2000);
+  };
+
+  const setShareStatus = (message: string) => {
+    setShareMessage(message);
+    if (shareTimerRef.current) {
+      window.clearTimeout(shareTimerRef.current);
+    }
+    shareTimerRef.current = window.setTimeout(() => {
+      setShareMessage(null);
+    }, 2500);
+  };
+
+  const handleShare = async () => {
+    if (typeof window === 'undefined') return;
+    const url = window.location.href;
+    const title = state.name.trim()
+      ? `${state.name.trim()}'s Valentine`
+      : 'Valentine';
+    const text = state.name.trim()
+      ? `A little something for ${state.name.trim()}.`
+      : 'A little something for you.';
+
+    try {
+      if (navigator.share) {
+        await navigator.share({ title, text, url });
+        incrementStat('shares');
+        setShareStatus('Shared.');
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        incrementStat('shares');
+        setShareStatus('Link copied.');
+        return;
+      }
+
+      const temp = document.createElement('textarea');
+      temp.value = url;
+      temp.setAttribute('readonly', '');
+      temp.style.position = 'absolute';
+      temp.style.left = '-9999px';
+      document.body.appendChild(temp);
+      temp.select();
+      document.execCommand('copy');
+      document.body.removeChild(temp);
+      incrementStat('shares');
+      setShareStatus('Link copied.');
+    } catch (error) {
+      setShareStatus('Share failed.');
+    }
+  };
+
   useEffect(() => {
     void runDrain();
     return () => {
       if (drainTimerRef.current) {
         window.clearTimeout(drainTimerRef.current);
+      }
+      if (shareTimerRef.current) {
+        window.clearTimeout(shareTimerRef.current);
       }
     };
   }, []);
@@ -144,7 +242,10 @@ export default function App() {
     return [];
   }, [state]);
 
-  const handleConfirmYes = () => {
+  const handleConfirmYes = (source: 'yes' | 'no' = 'yes') => {
+    if (source === 'yes') incrementStat('yesClicks');
+    if (source === 'no') incrementStat('noClicks');
+    triggerConfetti();
     dispatch({ type: 'CONFIRM_YES' });
   };
 
@@ -152,7 +253,7 @@ export default function App() {
     setNoIsYes(true);
     setNoWiggle(true);
     window.setTimeout(() => setNoWiggle(false), 200);
-    handleConfirmYes();
+    handleConfirmYes('no');
   };
 
   const handleNoKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -165,6 +266,11 @@ export default function App() {
   const handleSelectGift = (gift: Gift) => {
     if (state.view !== 'GIFTS' || isSubmitting) return;
     if (state.selected.length >= 2) return;
+
+    incrementStat('giftSelections');
+    if (state.selected.length === 1) {
+      triggerConfetti();
+    }
 
     setLeavingIds((prev) => new Set(prev).add(gift.id));
     window.setTimeout(() => {
@@ -200,6 +306,7 @@ export default function App() {
           scheduleDrainFromStorage();
         }
       }
+      incrementStat('completions');
       dispatch({ type: 'SUBMIT_RESULT', ok: result.ok, error: result.ok ? undefined : result.error });
       setIsSubmitting(false);
     };
@@ -209,6 +316,26 @@ export default function App() {
 
   return (
     <PageShell background={state.view === 'THANKS' ? 'sparkles' : 'romance'}>
+      <div className="confetti-layer" aria-hidden="true">
+        {confettiBursts.flatMap((burst) =>
+          burst.pieces.map((piece) => (
+            <span
+              key={piece.id}
+              className="confetti-piece"
+              style={
+                {
+                  '--x': `${piece.x}%`,
+                  '--size': `${piece.size}px`,
+                  '--delay': `${piece.delay}ms`,
+                  '--duration': `${piece.duration}ms`,
+                  '--rot': `${piece.rotate}deg`,
+                  '--color': piece.color
+                } as React.CSSProperties
+              }
+            />
+          ))
+        )}
+      </div>
       {state.view === 'ASK' ? (
         <div className="flex flex-1 flex-col justify-center gap-10">
           <div className="valentine-panel mx-auto w-full max-w-3xl p-8 sm:p-12">
@@ -253,7 +380,16 @@ export default function App() {
                   <FontAwesomeIcon icon={noIsYes ? faHeart : faXmark} aria-hidden="true" />
                   {noIsYes ? 'Yes' : 'No'}
                 </Button>
+                <Button variant="ghost" size="md" onClick={handleShare}>
+                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                  Share
+                </Button>
               </div>
+              {shareMessage ? (
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-300" aria-live="polite">
+                  {shareMessage}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>
@@ -384,7 +520,16 @@ export default function App() {
                   <FontAwesomeIcon icon={faRotateLeft} aria-hidden="true" />
                   Start Over
                 </Button>
+                <Button variant="ghost" size="md" onClick={handleShare}>
+                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
+                  Share
+                </Button>
               </div>
+              {shareMessage ? (
+                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-300" aria-live="polite">
+                  {shareMessage}
+                </p>
+              ) : null}
             </div>
           </div>
         </div>

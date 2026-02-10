@@ -1,4 +1,29 @@
 <svg width="64" height="64" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="64" height="64" rx="16" fill="#FFE3E7"/>
-  <path d="M20 44L32 14L44 44H20Z" fill="#EA2F60"/>
+  <defs>
+    <linearGradient id="bg" x1="8" y1="8" x2="56" y2="56" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFF6F2"/>
+      <stop offset="0.55" stop-color="#FFE7F0"/>
+      <stop offset="1" stop-color="#FFECDD"/>
+    </linearGradient>
+    <linearGradient id="heart" x1="20" y1="14" x2="46" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF88A8"/>
+      <stop offset="0.55" stop-color="#F05D88"/>
+      <stop offset="1" stop-color="#D94873"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="16" fill="url(#bg)"/>
+  <circle cx="18" cy="18" r="3" fill="#FFD4E4"/>
+  <circle cx="50" cy="14" r="2.5" fill="#FFE2CF"/>
+  <circle cx="48" cy="46" r="3" fill="#FFD4E4"/>
+  <path
+    d="M32 48C20.5 39.5 15 33 15 24.5C15 18.7 19.7 14 25.5 14C29.4 14 32 16.1 32 16.1C32 16.1 34.6 14 38.5 14C44.3 14 49 18.7 49 24.5C49 33 43.5 39.5 32 48Z"
+    fill="url(#heart)"
+  />
+  <path
+    d="M25.5 24.5C25.5 22 27.5 20 30 20"
+    stroke="white"
+    stroke-width="2"
+    stroke-linecap="round"
+    opacity="0.7"
+  />
 </svg>
