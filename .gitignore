@@ -3,3 +3,6 @@ node_modules
 dist
 .agents
 .claude
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js

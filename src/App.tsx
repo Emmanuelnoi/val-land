@@ -242,9 +242,8 @@ export default function App() {
     return [];
   }, [state]);
 
-  const handleConfirmYes = (source: 'yes' | 'no' = 'yes') => {
-    if (source === 'yes') incrementStat('yesClicks');
-    if (source === 'no') incrementStat('noClicks');
+  const handleConfirmYes = () => {
+    incrementStat('yesClicks');
     triggerConfetti();
     dispatch({ type: 'CONFIRM_YES' });
   };
@@ -253,7 +252,9 @@ export default function App() {
     setNoIsYes(true);
     setNoWiggle(true);
     window.setTimeout(() => setNoWiggle(false), 200);
-    handleConfirmYes('no');
+    incrementStat('noClicks');
+    triggerConfetti();
+    dispatch({ type: 'CONFIRM_YES' });
   };
 
   const handleNoKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
