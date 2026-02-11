@@ -1,14 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'node:crypto';
-import { kvAppend, kvGet } from '../src/server/kv';
+import { kvAppend, kvGet } from '../src/server/kv.js';
 import {
   createRateLimiter,
   getClientIp,
   isValidSlug,
   sanitizeText,
   sanitizeUrl
-} from '../src/server/security';
-import type { Gift, SelectedGift } from '../src/lib/types';
+} from '../src/server/security.js';
+import type { Gift, SelectedGift } from '../src/lib/types.js';
 
 type IncomingPayload = {
   slug?: string;

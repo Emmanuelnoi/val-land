@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { kvGet, kvSet } from '../../src/server/kv';
+import { kvGet, kvSet } from '../../src/server/kv.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {

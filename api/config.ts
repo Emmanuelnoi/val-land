@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { kvGet } from '../src/server/kv';
-import { isValidSlug, sanitizeText, sanitizeUrl } from '../src/server/security';
-import type { Gift, ValentinePublicConfig } from '../src/lib/types';
+import { kvGet } from '../src/server/kv.js';
+import { isValidSlug, sanitizeText, sanitizeUrl } from '../src/server/security.js';
+import type { Gift, ValentinePublicConfig } from '../src/lib/types.js';
 
 type StoredConfig = {
   toName?: unknown;

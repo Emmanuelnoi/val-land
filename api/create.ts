@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { kvGet, kvSet } from '../src/server/kv';
+import { kvGet, kvSet } from '../src/server/kv.js';
 import {
   createRateLimiter,
   generateSlug,
@@ -9,8 +9,8 @@ import {
   isDiscordWebhook,
   sanitizeText,
   sanitizeUrl
-} from '../src/server/security';
-import type { Gift } from '../src/lib/types';
+} from '../src/server/security.js';
+import type { Gift } from '../src/lib/types.js';
 
 type IncomingGift = Partial<Gift>;
 

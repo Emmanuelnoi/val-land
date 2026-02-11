@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { kvGet } from '../src/server/kv';
-import { hashToken, isValidSlug, timingSafeEqualHex } from '../src/server/security';
-import type { ValentineSubmission } from '../src/lib/types';
+import { kvGet } from '../src/server/kv.js';
+import { hashToken, isValidSlug, timingSafeEqualHex } from '../src/server/security.js';
+import type { ValentineSubmission } from '../src/lib/types.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
