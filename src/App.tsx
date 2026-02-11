@@ -59,16 +59,17 @@ type ConfettiBurst = {
   pieces: ConfettiPiece[];
 };
 
-const CONFETTI_COLORS = ['#FF90B3', '#F05D88', '#FFD4B2', '#FFE7F0', '#D94873'];
+const CONFETTI_COLORS = ['#FF90B3', '#F05D88', '#FFD4B2', '#FFE7F0', '#D94873', '#FFB3C7'];
+const CONFETTI_PIECES = 54;
 
 function createConfettiBurst(): ConfettiBurst {
   const burstId = `burst_${Math.random().toString(16).slice(2)}`;
-  const pieces = Array.from({ length: 18 }).map((_, index) => ({
+  const pieces = Array.from({ length: CONFETTI_PIECES }).map((_, index) => ({
     id: `${burstId}_${index}`,
     x: Math.round(10 + Math.random() * 80),
-    size: Math.round(6 + Math.random() * 6),
-    delay: Math.round(Math.random() * 200),
-    duration: Math.round(1100 + Math.random() * 700),
+    size: Math.round(7 + Math.random() * 8),
+    delay: Math.round(Math.random() * 300),
+    duration: Math.round(2000 + Math.random() * 1400),
     rotate: Math.round(Math.random() * 360),
     color: CONFETTI_COLORS[index % CONFETTI_COLORS.length]
   }));
@@ -160,8 +161,14 @@ export default function App() {
     const burst = createConfettiBurst();
     setConfettiBursts((prev) => [...prev, burst]);
     window.setTimeout(() => {
-      setConfettiBursts((prev) => prev.filter((item) => item.id !== burst.id));
-    }, 2000);
+      const followUp = createConfettiBurst();
+      setConfettiBursts((prev) => [...prev, followUp]);
+      window.setTimeout(() => {
+        setConfettiBursts((prev) =>
+          prev.filter((item) => item.id !== burst.id && item.id !== followUp.id)
+        );
+      }, 2400);
+    }, 550);
   };
 
   const setShareStatus = (message: string) => {
@@ -381,16 +388,7 @@ export default function App() {
                   <FontAwesomeIcon icon={noIsYes ? faHeart : faXmark} aria-hidden="true" />
                   {noIsYes ? 'Yes' : 'No'}
                 </Button>
-                <Button variant="ghost" size="md" onClick={handleShare}>
-                  <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
-                  Share
-                </Button>
               </div>
-              {shareMessage ? (
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-300" aria-live="polite">
-                  {shareMessage}
-                </p>
-              ) : null}
             </div>
           </div>
         </div>
