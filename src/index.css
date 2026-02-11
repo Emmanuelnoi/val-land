@@ -115,6 +115,10 @@
     @apply flex items-center gap-3 rounded-2xl border border-white/70 bg-white/80 px-4 py-3 shadow-soft;
   }
 
+  .input-field {
+    @apply w-full rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-base text-ink-500 shadow-soft placeholder:text-ink-300 focus-ring;
+  }
+
   .input-shell:focus-within {
     border-color: rgba(255, 160, 190, 0.85);
     box-shadow: 0 16px 30px -26px rgba(20, 9, 24, 0.6);

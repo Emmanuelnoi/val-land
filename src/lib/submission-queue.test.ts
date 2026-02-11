@@ -24,8 +24,18 @@ const samplePayload = (name: string): SubmissionPayload => ({
   name,
   createdAt: '2026-02-10T00:00:00.000Z',
   gifts: [
-    { id: 'one', title: 'Gift One', linkUrl: 'https://example.com/1' },
-    { id: 'two', title: 'Gift Two', linkUrl: 'https://example.com/2' }
+    {
+      id: 'one',
+      title: 'Gift One',
+      linkUrl: 'https://example.com/1',
+      imageUrl: 'https://example.com/1.jpg'
+    },
+    {
+      id: 'two',
+      title: 'Gift Two',
+      linkUrl: 'https://example.com/2',
+      imageUrl: 'https://example.com/2.jpg'
+    }
   ]
 });
 

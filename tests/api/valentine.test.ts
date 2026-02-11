@@ -11,7 +11,8 @@ const basePayload = {
   name: 'Bri',
   gifts: [
     { id: 'one', title: 'Gift One', linkUrl: 'https://example.com/1' },
-    { id: 'two', title: 'Gift Two', linkUrl: 'https://example.com/2' }
+    { id: 'two', title: 'Gift Two', linkUrl: 'https://example.com/2' },
+    { id: 'three', title: 'Gift Three', linkUrl: 'https://example.com/3' }
   ],
   createdAt: '2026-02-10T00:00:00.000Z'
 };

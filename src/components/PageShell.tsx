@@ -1,7 +1,7 @@
-import React from 'react';
+import type { ReactNode } from 'react';
 
 type PageShellProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   background?: 'romance' | 'sparkles';
 };
 

@@ -1,4 +1,4 @@
-import React from 'react';
+import type { ChangeEvent } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 
@@ -16,7 +16,7 @@ export default function NameInput({
   readOnly
 }: NameInputProps) {
   const inputProps = onChange
-    ? { value, onChange: (event: React.ChangeEvent<HTMLInputElement>) => onChange(event.target.value) }
+    ? { value, onChange: (event: ChangeEvent<HTMLInputElement>) => onChange(event.target.value) }
     : { defaultValue: value };
 
   return (

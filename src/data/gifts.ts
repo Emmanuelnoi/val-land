@@ -1,10 +1,4 @@
-export type Gift = {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  linkUrl?: string;
-};
+import type { Gift } from '../lib/types';
 
 // TODO: Replace placeholder images and links with real gift ideas.
 export const gifts: Gift[] = [

@@ -25,6 +25,16 @@ const RATE_STORE_TTL_MS = RATE_LIMIT_WINDOW_MS * 2;
 const RATE_STORE_MAX = 1000;
 const rateStore = new Map<string, RateEntry>();
 
+async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 5000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function getClientIp(req: VercelRequest): string {
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string' && forwarded.length > 0) {
@@ -139,8 +149,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const name = sanitizeText(rawName, 60) || '(no name)';
 
   const gifts = Array.isArray(parsed.gifts) ? parsed.gifts : [];
-  if (gifts.length !== 2) {
-    res.status(400).json({ ok: false, error: 'Exactly two gifts are required' });
+  if (gifts.length !== 3) {
+    res.status(400).json({ ok: false, error: 'Exactly three gifts are required' });
     return;
   }
 
@@ -185,6 +195,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       inline: false
     },
     {
+      name: 'Gift 3',
+      value: sanitizedGifts[2].linkUrl
+        ? `${sanitizedGifts[2].title}\n${sanitizedGifts[2].linkUrl}`
+        : sanitizedGifts[2].title,
+      inline: false
+    },
+    {
       name: 'Timestamp',
       value: timestamp,
       inline: false
@@ -192,21 +209,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   ];
 
   try {
-    const response = await fetch(webhookUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        allowed_mentions: { parse: [] },
-        embeds: [
-          {
-            title: 'New Valentine Submission',
-            color: 0xea2f60,
-            fields: embedFields,
-            footer: { text: 'Valentine App' }
-          }
-        ]
-      })
-    });
+    const response = await fetchWithTimeout(
+      webhookUrl,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          allowed_mentions: { parse: [] },
+          embeds: [
+            {
+              title: 'New Valentine Submission',
+              color: 0xea2f60,
+              fields: embedFields,
+              footer: { text: 'Valentine App' }
+            }
+          ]
+        })
+      },
+      5000
+    );
 
     if (!response.ok) {
       res.status(502).json({ ok: false, error: 'Webhook request failed' });
