@@ -3,13 +3,23 @@ export type ThemeKey =
   | 'birthday-neutral'
   | 'birthday-men'
   | 'birthday-women'
+  | 'red'
+  | 'yellow'
+  | 'blue'
+  | 'green'
+  | 'mono-dark'
+  | 'mono-light'
+  | 'midnight';
+
+type LegacyThemeKey =
+  | 'birthday'
+  | 'sage'
+  | 'sage-mist'
+  | 'sage-olive'
+  | 'sage-stone'
   | 'primary-red'
   | 'primary-blue'
-  | 'primary-yellow'
-  | 'mono-dark'
-  | 'mono-light';
-
-type LegacyThemeKey = 'birthday' | 'sage' | 'sage-mist' | 'sage-olive' | 'sage-stone';
+  | 'primary-yellow';
 
 export type ThemeDefinition = {
   key: ThemeKey;
@@ -49,25 +59,32 @@ export const THEMES: ThemeDefinition[] = [
     confetti: ['#F26A8D', '#FFD1DC', '#C85A84', '#FFE5EC', '#FF9EB5', '#E56B8C']
   },
   {
-    key: 'primary-red',
-    label: 'Primary Red',
-    description: 'Crimson glow with soft blush.',
-    preview: ['#e24b5d', '#ffb1bd', '#b83b4a'],
-    confetti: ['#E24B5D', '#FFB1BD', '#F8D7DC', '#D63B50', '#FF879B', '#B83B4A']
+    key: 'red',
+    label: 'Red',
+    description: 'Deep garnet with warm embers.',
+    preview: ['#8f1d2c', '#d75c44', '#4f0e1d'],
+    confetti: ['#8F1D2C', '#D75C44', '#F2B4A2', '#B43B2A', '#F08A74', '#4F0E1D']
   },
   {
-    key: 'primary-blue',
-    label: 'Primary Blue',
-    description: 'Cobalt clarity with airy light.',
-    preview: ['#2f5aa6', '#8cb7ff', '#1f3b5f'],
-    confetti: ['#2F5AA6', '#8CB7FF', '#D9E6FF', '#1F3B5F', '#5F8FE0', '#3B73C4']
+    key: 'yellow',
+    label: 'Yellow',
+    description: 'Saffron glow with soft citrus.',
+    preview: ['#d9931a', '#ffe3a3', '#9a5d12'],
+    confetti: ['#D9931A', '#FFE3A3', '#FFF2CC', '#B97512', '#F4C65C', '#9A5D12']
   },
   {
-    key: 'primary-yellow',
-    label: 'Primary Yellow',
-    description: 'Sunlit gold with warm cream.',
-    preview: ['#f2b03f', '#ffe08a', '#c2762f'],
-    confetti: ['#F2B03F', '#FFE08A', '#FFF2C7', '#C2762F', '#F0C75B', '#E48A2C']
+    key: 'blue',
+    label: 'Blue',
+    description: 'Azure clarity with midnight edge.',
+    preview: ['#2f6fb5', '#9bd3ff', '#1b3458'],
+    confetti: ['#2F6FB5', '#9BD3FF', '#DCEBFF', '#1B3458', '#5A93D9', '#3D78C2']
+  },
+  {
+    key: 'green',
+    label: 'Green',
+    description: 'Emerald lift with fresh mint.',
+    preview: ['#2f8f6b', '#a7e2c3', '#1f5b46'],
+    confetti: ['#2F8F6B', '#A7E2C3', '#E3F6ED', '#1F5B46', '#63B391', '#2E7D64']
   },
   {
     key: 'mono-dark',
@@ -82,6 +99,13 @@ export const THEMES: ThemeDefinition[] = [
     description: 'Pearl grey with quiet glow.',
     preview: ['#b7bcc5', '#f2f4f7', '#7d8590'],
     confetti: ['#B7BCC5', '#F2F4F7', '#E2E5EA', '#7D8590', '#9EA5B0', '#D6DAE1']
+  },
+  {
+    key: 'midnight',
+    label: 'Midnight',
+    description: 'True dark with cool neon flicker.',
+    preview: ['#0c111c', '#6dd3d6', '#1c2433'],
+    confetti: ['#6DD3D6', '#9B9EFF', '#E6EAF2', '#354A6B', '#F0C06D', '#1C2433']
   }
 ];
 
@@ -98,6 +122,9 @@ export function normalizeThemeKey(value?: string): ThemeKey {
   if (isThemeKey(value)) return value;
   if (value === 'birthday') return 'birthday-neutral';
   if (value === 'sage' || value.startsWith('sage-')) return 'mono-light';
+  if (value === 'primary-red') return 'red';
+  if (value === 'primary-blue') return 'blue';
+  if (value === 'primary-yellow') return 'yellow';
   return DEFAULT_THEME;
 }
 
@@ -110,6 +137,14 @@ export function getTheme(key?: string): ThemeDefinition {
 export function getThemeFamily(key: ThemeKey | LegacyThemeKey) {
   const normalized = normalizeThemeKey(key);
   if (normalized.startsWith('birthday')) return 'birthday';
-  if (normalized.startsWith('primary') || normalized.startsWith('mono')) return 'sage';
+  if (
+    normalized === 'red' ||
+    normalized === 'yellow' ||
+    normalized === 'blue' ||
+    normalized === 'green' ||
+    normalized.startsWith('mono') ||
+    normalized === 'midnight'
+  )
+    return 'sage';
   return 'valentine';
 }

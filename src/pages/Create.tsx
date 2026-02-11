@@ -120,10 +120,14 @@ export default function Create() {
       { label: 'Valentine', themes: THEMES.filter((theme) => theme.key === 'valentine') },
       { label: 'Birthday', themes: THEMES.filter((theme) => theme.key.startsWith('birthday')) },
       {
-        label: 'Primary + Mono',
-        themes: THEMES.filter(
-          (theme) => theme.key.startsWith('primary') || theme.key.startsWith('mono')
+        label: 'Color',
+        themes: THEMES.filter((theme) =>
+          ['red', 'yellow', 'blue', 'green'].includes(theme.key)
         )
+      },
+      {
+        label: 'Mono',
+        themes: THEMES.filter((theme) => theme.key.startsWith('mono') || theme.key === 'midnight')
       }
     ],
     []
