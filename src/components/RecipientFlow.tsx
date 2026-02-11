@@ -20,7 +20,7 @@ import type { Gift, SelectedGift } from '../lib/types';
 import type { SubmitResult } from '../lib/api';
 import { incrementStat } from '../lib/analytics';
 import { useTheme } from '../theme';
-import type { ThemeKey } from '../lib/themes';
+import { getThemeFamily } from '../lib/themes';
 
 type RecipientConfig = {
   toName: string;
@@ -117,9 +117,9 @@ function toSelectedGift(gift: Gift): SelectedGift {
   };
 }
 
-function getThemeCopy(themeKey: ThemeKey, toName: string) {
+function getThemeCopy(themeFamily: 'valentine' | 'birthday' | 'sage', toName: string) {
   const name = toName?.trim();
-  switch (themeKey) {
+  switch (themeFamily) {
     case 'birthday':
       return {
         collectionLabel: 'Birthday Selection',
@@ -140,7 +140,6 @@ function getThemeCopy(themeKey: ThemeKey, toName: string) {
         thanksTitle: 'Selections Confirmed',
         thanksSubtitle: 'Your picks are set. Here is the recap.'
       };
-    case 'valentine':
     default:
       return {
         collectionLabel: 'Valentine Collection',
@@ -158,7 +157,7 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
   const { activeTheme } = useTheme();
   const confettiColors = useMemo(() => activeTheme.confetti, [activeTheme.confetti]);
   const themeCopy = useMemo(
-    () => getThemeCopy(activeTheme.key, config.toName),
+    () => getThemeCopy(getThemeFamily(activeTheme.key), config.toName),
     [activeTheme.key, config.toName]
   );
   const [state, dispatch] = useReducer(reducer, initialState);

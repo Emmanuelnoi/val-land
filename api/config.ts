@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kvGet } from '../src/server/kv.js';
 import { isValidSlug, sanitizeText, sanitizeUrl } from '../src/server/security.js';
-import { DEFAULT_THEME, isThemeKey } from '../src/lib/themes.js';
+import { normalizeThemeKey } from '../src/lib/themes.js';
 import type { ThemeKey } from '../src/lib/themes.js';
 import type { Gift, ValentinePublicConfig } from '../src/lib/types.js';
 
@@ -51,7 +51,7 @@ function normalizeConfig(value: StoredConfig): ValentinePublicConfig | null {
 
   const createdAt = typeof value.createdAt === 'string' ? value.createdAt : new Date().toISOString();
   const themeRaw = typeof value.theme === 'string' ? value.theme : '';
-  const theme: ThemeKey = isThemeKey(themeRaw) ? themeRaw : DEFAULT_THEME;
+  const theme: ThemeKey = normalizeThemeKey(themeRaw);
 
   return {
     toName,

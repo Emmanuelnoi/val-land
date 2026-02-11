@@ -10,7 +10,7 @@ import {
   sanitizeText,
   sanitizeUrl
 } from '../src/server/security.js';
-import { DEFAULT_THEME, isThemeKey } from '../src/lib/themes.js';
+import { normalizeThemeKey } from '../src/lib/themes.js';
 import type { ThemeKey } from '../src/lib/themes.js';
 import type { Gift } from '../src/lib/types.js';
 
@@ -87,7 +87,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const toName = sanitizeText(parsed.toName ?? '', 60);
   const message = sanitizeText(parsed.message ?? '', 180);
-  const theme: ThemeKey = isThemeKey(parsed.theme ?? '') ? (parsed.theme as ThemeKey) : DEFAULT_THEME;
+  const theme: ThemeKey = normalizeThemeKey(parsed.theme);
 
   if (!toName || !message) {
     res.status(400).json({ ok: false, error: 'Name and message are required' });

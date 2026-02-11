@@ -16,7 +16,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { Link } from '../router';
 import { createValentine } from '../lib/api';
-import { DEFAULT_THEME, THEMES } from '../lib/themes';
+import { DEFAULT_THEME, THEMES, getThemeFamily } from '../lib/themes';
 import type { ThemeKey } from '../lib/themes';
 import type { Gift, ValentineCreatePayload, ValentineCreateResult } from '../lib/types';
 import { useTheme } from '../theme';
@@ -75,7 +75,7 @@ export default function Create() {
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey>(DEFAULT_THEME);
   const { setTheme } = useTheme();
   const createHeadline = useMemo(() => {
-    switch (selectedTheme) {
+    switch (getThemeFamily(selectedTheme)) {
       case 'birthday':
         return 'Create a Birthday Page';
       case 'sage':
@@ -86,7 +86,7 @@ export default function Create() {
     }
   }, [selectedTheme]);
   const createSubtitle = useMemo(() => {
-    switch (selectedTheme) {
+    switch (getThemeFamily(selectedTheme)) {
       case 'birthday':
         return 'Build a celebratory page with gifts, a message, and optional Discord notifications.';
       case 'sage':
@@ -114,6 +114,15 @@ export default function Create() {
         (gift.linkUrl?.trim() ?? '')
     );
   }, [toName, message, discordWebhook, gifts, result, selectedTheme]);
+
+  const themeGroups = useMemo(
+    () => [
+      { label: 'Valentine', themes: THEMES.filter((theme) => theme.key === 'valentine') },
+      { label: 'Birthday', themes: THEMES.filter((theme) => theme.key.startsWith('birthday')) },
+      { label: 'Sage', themes: THEMES.filter((theme) => theme.key.startsWith('sage')) }
+    ],
+    []
+  );
 
   useEffect(() => {
     if (!hasUnsavedChanges || typeof window === 'undefined') return undefined;
@@ -285,46 +294,55 @@ export default function Create() {
                 <FontAwesomeIcon icon={faWandMagicSparkles} aria-hidden="true" />
                 Theme
               </div>
-              <div role="radiogroup" className="grid gap-3 sm:grid-cols-2">
-                {THEMES.map((theme) => {
-                  const isActive = theme.key === selectedTheme;
-                  return (
-                    <button
-                      key={theme.key}
-                      type="button"
-                      role="radio"
-                      aria-checked={isActive}
-                      onClick={() => setSelectedTheme(theme.key)}
-                      className={[
-                        'rounded-2xl border px-4 py-3 text-left transition-shadow focus-ring',
-                        isActive
-                          ? 'border-accent-strong bg-accent-soft shadow-soft'
-                          : 'border-white/70 bg-white/70 hover:shadow-soft'
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="text-sm font-semibold text-ink-500">{theme.label}</span>
-                        {isActive ? (
-                          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-                            Active
-                          </span>
-                        ) : null}
-                      </div>
-                      <p className="mt-1 text-xs text-ink-300">{theme.description}</p>
-                      <div className="mt-3 flex items-center gap-2">
-                        {theme.preview.map((color) => (
-                          <span
-                            key={`${theme.key}-${color}`}
-                            className="h-3 w-3 rounded-full border border-white/80"
-                            style={{ backgroundColor: color }}
-                          />
-                        ))}
-                      </div>
-                    </button>
-                  );
-                })}
+              <div role="radiogroup" className="space-y-4">
+                {themeGroups.map((group) => (
+                  <div key={group.label} className="space-y-3">
+                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">
+                      {group.label}
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      {group.themes.map((theme) => {
+                        const isActive = theme.key === selectedTheme;
+                        return (
+                          <button
+                            key={theme.key}
+                            type="button"
+                            role="radio"
+                            aria-checked={isActive}
+                            onClick={() => setSelectedTheme(theme.key)}
+                            className={[
+                              'rounded-2xl border px-4 py-3 text-left transition-shadow focus-ring',
+                              isActive
+                                ? 'border-accent-strong bg-accent-soft shadow-soft'
+                                : 'border-white/70 bg-white/70 hover:shadow-soft'
+                            ]
+                              .filter(Boolean)
+                              .join(' ')}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm font-semibold text-ink-500">{theme.label}</span>
+                              {isActive ? (
+                                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+                                  Active
+                                </span>
+                              ) : null}
+                            </div>
+                            <p className="mt-1 text-xs text-ink-300">{theme.description}</p>
+                            <div className="mt-3 flex items-center gap-2">
+                              {theme.preview.map((color) => (
+                                <span
+                                  key={`${theme.key}-${color}`}
+                                  className="h-3 w-3 rounded-full border border-white/80"
+                                  style={{ backgroundColor: color }}
+                                />
+                              ))}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </Card>
