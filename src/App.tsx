@@ -4,6 +4,7 @@ import HomeRecipient from './pages/HomeRecipient';
 import Create from './pages/Create';
 import RecipientBySlug from './pages/RecipientBySlug';
 import Results from './pages/Results';
+import { ThemeProvider, useTheme } from './theme';
 
 function AppRoutes() {
   const { route } = useRouter();
@@ -22,10 +23,11 @@ function AppRoutes() {
 
 function AppShell() {
   const { route } = useRouter();
+  const { theme } = useTheme();
   const background = route.name === 'results' ? 'sparkles' : 'romance';
 
   return (
-    <PageShell background={background}>
+    <PageShell background={background} theme={theme}>
       <AppRoutes />
     </PageShell>
   );
@@ -33,8 +35,10 @@ function AppShell() {
 
 export default function App() {
   return (
-    <RouterProvider>
-      <AppShell />
-    </RouterProvider>
+    <ThemeProvider>
+      <RouterProvider>
+        <AppShell />
+      </RouterProvider>
+    </ThemeProvider>
   );
 }

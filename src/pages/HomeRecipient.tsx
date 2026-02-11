@@ -4,6 +4,8 @@ import { gifts as giftData } from '../data/gifts';
 import { recipientMessage, recipientName } from '../data/recipient';
 import { submitSelection, type SubmitResult } from '../lib/api';
 import type { SelectedGift, SubmissionPayload } from '../lib/types';
+import { DEFAULT_THEME } from '../lib/themes';
+import { useTheme } from '../theme';
 import {
   drainSubmissionQueue,
   enqueueFailedSubmission,
@@ -17,6 +19,7 @@ function getBrowserStorage() {
 }
 
 export default function HomeRecipient() {
+  const { setTheme } = useTheme();
   const drainTimerRef = useRef<number | null>(null);
   const drainingRef = useRef(false);
 
@@ -50,13 +53,14 @@ export default function HomeRecipient() {
   };
 
   useEffect(() => {
+    setTheme(DEFAULT_THEME);
     void runDrain();
     return () => {
       if (drainTimerRef.current) {
         window.clearTimeout(drainTimerRef.current);
       }
     };
-  }, []);
+  }, [setTheme]);
 
   const handleSubmit = async (pickedGifts: SelectedGift[]): Promise<SubmitResult> => {
     const payload: SubmissionPayload = {

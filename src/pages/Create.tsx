@@ -16,7 +16,10 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { Link } from '../router';
 import { createValentine } from '../lib/api';
+import { DEFAULT_THEME, THEMES } from '../lib/themes';
+import type { ThemeKey } from '../lib/themes';
 import type { Gift, ValentineCreatePayload, ValentineCreateResult } from '../lib/types';
+import { useTheme } from '../theme';
 
 type GiftForm = Gift & { formId: string };
 
@@ -68,10 +71,40 @@ export default function Create() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<ValentineCreateResult | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [copiedKey, setCopiedKey] = useState<'share' | 'results' | null>(null);
+  const [selectedTheme, setSelectedTheme] = useState<ThemeKey>(DEFAULT_THEME);
+  const { setTheme } = useTheme();
+  const createHeadline = useMemo(() => {
+    switch (selectedTheme) {
+      case 'birthday':
+        return 'Create a Birthday Page';
+      case 'sage':
+        return 'Create a Gift Page';
+      case 'valentine':
+      default:
+        return 'Create Your Valentine';
+    }
+  }, [selectedTheme]);
+  const createSubtitle = useMemo(() => {
+    switch (selectedTheme) {
+      case 'birthday':
+        return 'Build a celebratory page with gifts, a message, and optional Discord notifications.';
+      case 'sage':
+        return 'Build a calm, thoughtful page with gifts, a message, and optional Discord notifications.';
+      case 'valentine':
+      default:
+        return 'Build a personalized page with gifts, a message, and optional Discord notifications.';
+    }
+  }, [selectedTheme]);
 
   const remainingMessage = useMemo(() => MAX_MESSAGE - message.length, [message.length]);
+
+  useEffect(() => {
+    setTheme(selectedTheme);
+  }, [selectedTheme, setTheme]);
   const hasUnsavedChanges = useMemo(() => {
     if (result) return false;
+    if (selectedTheme !== DEFAULT_THEME) return true;
     if (toName.trim() || message.trim() || discordWebhook.trim()) return true;
     return gifts.some(
       (gift) =>
@@ -80,7 +113,7 @@ export default function Create() {
         gift.imageUrl.trim() ||
         (gift.linkUrl?.trim() ?? '')
     );
-  }, [toName, message, discordWebhook, gifts, result]);
+  }, [toName, message, discordWebhook, gifts, result, selectedTheme]);
 
   useEffect(() => {
     if (!hasUnsavedChanges || typeof window === 'undefined') return undefined;
@@ -174,7 +207,8 @@ export default function Create() {
         imageUrl: gift.imageUrl.trim(),
         linkUrl: gift.linkUrl?.trim() || undefined
       })),
-      creatorDiscordWebhookUrl: discordWebhook.trim() || undefined
+      creatorDiscordWebhookUrl: discordWebhook.trim() || undefined,
+      theme: selectedTheme
     };
 
     const response = await createValentine(payload);
@@ -186,11 +220,12 @@ export default function Create() {
     setIsSubmitting(false);
   };
 
-  const handleCopy = async (value: string, label: string) => {
+  const handleCopy = async (value: string, label: string, key: 'share' | 'results') => {
     try {
       if (navigator.clipboard?.writeText) {
         await navigator.clipboard.writeText(value);
         setCopyMessage(`${label} copied.`);
+        setCopiedKey(key);
       } else {
         const temp = document.createElement('textarea');
         temp.value = value;
@@ -202,11 +237,15 @@ export default function Create() {
         document.execCommand('copy');
         document.body.removeChild(temp);
         setCopyMessage(`${label} copied.`);
+        setCopiedKey(key);
       }
     } catch (error) {
       setCopyMessage('Copy failed.');
     } finally {
-      window.setTimeout(() => setCopyMessage(null), 2500);
+      window.setTimeout(() => {
+        setCopyMessage(null);
+        setCopiedKey(null);
+      }, 2000);
     }
   };
 
@@ -216,11 +255,9 @@ export default function Create() {
         <div>
           <span className="valentine-chip">Creator Suite</span>
           <h1 className="mt-4 text-balance text-3xl font-semibold text-shadow-soft sm:text-4xl">
-            <span className="text-rose-gradient">Create Your Valentine</span>
+            <span className="text-rose-gradient">{createHeadline}</span>
           </h1>
-          <p className="mt-2 max-w-2xl text-base text-ink-300/90">
-            Build a personalized page with gifts, a message, and optional Discord notifications.
-          </p>
+          <p className="mt-2 max-w-2xl text-base text-ink-300/90">{createSubtitle}</p>
         </div>
         <Link
           to="/"
@@ -236,12 +273,61 @@ export default function Create() {
           }}
         >
           <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
-          Back to Valentine
+          Back to Home
         </Link>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <form className="space-y-6" onSubmit={handleSubmit}>
+          <Card>
+            <div className="space-y-4">
+              <div className="flex items-center gap-2 text-sm font-semibold text-ink-400">
+                <FontAwesomeIcon icon={faWandMagicSparkles} aria-hidden="true" />
+                Theme
+              </div>
+              <div role="radiogroup" className="grid gap-3 sm:grid-cols-2">
+                {THEMES.map((theme) => {
+                  const isActive = theme.key === selectedTheme;
+                  return (
+                    <button
+                      key={theme.key}
+                      type="button"
+                      role="radio"
+                      aria-checked={isActive}
+                      onClick={() => setSelectedTheme(theme.key)}
+                      className={[
+                        'rounded-2xl border px-4 py-3 text-left transition-shadow focus-ring',
+                        isActive
+                          ? 'border-accent-strong bg-accent-soft shadow-soft'
+                          : 'border-white/70 bg-white/70 hover:shadow-soft'
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold text-ink-500">{theme.label}</span>
+                        {isActive ? (
+                          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+                            Active
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="mt-1 text-xs text-ink-300">{theme.description}</p>
+                      <div className="mt-3 flex items-center gap-2">
+                        {theme.preview.map((color) => (
+                          <span
+                            key={`${theme.key}-${color}`}
+                            className="h-3 w-3 rounded-full border border-white/80"
+                            style={{ backgroundColor: color }}
+                          />
+                        ))}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </Card>
           <Card>
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-sm font-semibold text-ink-400">
@@ -298,7 +384,7 @@ export default function Create() {
                 Gift Builder
               </div>
               {errors.gifts ? (
-                <div className="flex items-start gap-2 text-sm text-rose-700" aria-live="polite">
+                <div className="flex items-start gap-2 text-sm text-accent-strong" aria-live="polite">
                   <FontAwesomeIcon icon={faTriangleExclamation} className="mt-0.5" aria-hidden="true" />
                   <span>{errors.gifts}</span>
                 </div>
@@ -309,12 +395,12 @@ export default function Create() {
                   const giftErrors = errors.giftErrors[gift.formId] || {};
                   const previewOk = gift.imageUrl.trim() && isHttpUrl(gift.imageUrl.trim());
                   return (
-                    <div key={gift.formId} className="rounded-2xl border border-rose-100/80 bg-white/70 p-4">
+                    <div key={gift.formId} className="rounded-2xl border border-accent-muted bg-white/70 p-4">
                       <div className="flex items-center justify-between">
                         <h3 className="text-sm font-semibold text-ink-500">Gift {index + 1}</h3>
                         <button
                           type="button"
-                          className="text-xs font-semibold text-rose-600 hover:text-rose-700 focus-ring touch-manipulation"
+                          className="text-xs font-semibold text-accent hover-text-accent-strong focus-ring touch-manipulation"
                           onClick={() => handleRemoveGift(gift.formId)}
                           disabled={gifts.length <= MIN_GIFTS}
                         >
@@ -335,11 +421,7 @@ export default function Create() {
                               aria-invalid={Boolean(giftErrors.title)}
                               aria-describedby={giftErrors.title ? `${gift.formId}-title-error` : undefined}
                             />
-                            <span
-                              id={`${gift.formId}-title-error`}
-                              className="text-xs text-rose-600"
-                              aria-live="polite"
-                            >
+                            <span id={`${gift.formId}-title-error`} className="text-xs text-accent" aria-live="polite">
                               {giftErrors.title}
                             </span>
                           </label>
@@ -357,11 +439,7 @@ export default function Create() {
                                 giftErrors.description ? `${gift.formId}-description-error` : undefined
                               }
                             />
-                            <span
-                              id={`${gift.formId}-description-error`}
-                              className="text-xs text-rose-600"
-                              aria-live="polite"
-                            >
+                            <span id={`${gift.formId}-description-error`} className="text-xs text-accent" aria-live="polite">
                               {giftErrors.description}
                             </span>
                           </label>
@@ -378,11 +456,7 @@ export default function Create() {
                               aria-invalid={Boolean(giftErrors.imageUrl)}
                               aria-describedby={giftErrors.imageUrl ? `${gift.formId}-imageUrl-error` : undefined}
                             />
-                            <span
-                              id={`${gift.formId}-imageUrl-error`}
-                              className="text-xs text-rose-600"
-                              aria-live="polite"
-                            >
+                            <span id={`${gift.formId}-imageUrl-error`} className="text-xs text-accent" aria-live="polite">
                               {giftErrors.imageUrl}
                             </span>
                           </label>
@@ -399,16 +473,12 @@ export default function Create() {
                               aria-invalid={Boolean(giftErrors.linkUrl)}
                               aria-describedby={giftErrors.linkUrl ? `${gift.formId}-linkUrl-error` : undefined}
                             />
-                            <span
-                              id={`${gift.formId}-linkUrl-error`}
-                              className="text-xs text-rose-600"
-                              aria-live="polite"
-                            >
+                            <span id={`${gift.formId}-linkUrl-error`} className="text-xs text-accent" aria-live="polite">
                               {giftErrors.linkUrl}
                             </span>
                           </label>
                         </div>
-                        <div className="flex items-center justify-center rounded-2xl border border-rose-100 bg-rose-50/50 p-2 text-xs text-rose-400">
+                        <div className="flex items-center justify-center rounded-2xl border border-accent bg-accent-soft-faint p-2 text-xs text-accent-muted">
                           {previewOk ? (
                             <img
                               src={gift.imageUrl.trim()}
@@ -465,7 +535,7 @@ export default function Create() {
                   aria-invalid={Boolean(errors.creatorDiscordWebhookUrl)}
                   aria-describedby={errors.creatorDiscordWebhookUrl ? 'webhook-error' : undefined}
                 />
-                <span id="webhook-error" className="text-xs text-rose-600" aria-live="polite">
+                <span id="webhook-error" className="text-xs text-accent" aria-live="polite">
                   {errors.creatorDiscordWebhookUrl}
                 </span>
               </label>
@@ -506,30 +576,45 @@ export default function Create() {
                 <div className="text-sm font-semibold text-ink-500">Your links are ready</div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-300">Share link</p>
-                  <div className="mt-2 flex items-center justify-between gap-2 rounded-2xl border border-rose-100 bg-rose-50/60 px-3 py-2 text-sm text-ink-500">
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-2xl border border-accent bg-accent-soft-muted px-3 py-2 text-sm text-ink-500">
                     <span className="break-all">{result.shareUrl}</span>
                     <button
                       type="button"
-                      className="text-xs font-semibold text-rose-600 hover:text-rose-700 focus-ring touch-manipulation"
-                      onClick={() => handleCopy(result.shareUrl, 'Share link')}
+                      className={[
+                        'text-xs font-semibold text-accent transition-colors focus-ring touch-manipulation rounded-full px-2.5 py-1',
+                        copiedKey === 'share'
+                          ? 'bg-accent-soft-strong text-accent-strong'
+                          : 'hover-accent-soft hover-text-accent-strong'
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      onClick={() => handleCopy(result.shareUrl, 'Share link', 'share')}
                     >
-                      <FontAwesomeIcon icon={faCopy} aria-hidden="true" /> Copy
+                      <FontAwesomeIcon icon={faCopy} aria-hidden="true" /> {copiedKey === 'share' ? 'Copied' : 'Copy'}
                     </button>
                   </div>
                 </div>
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-300">Results link</p>
-                  <div className="mt-2 flex items-center justify-between gap-2 rounded-2xl border border-rose-100 bg-rose-50/60 px-3 py-2 text-sm text-ink-500">
+                  <div className="mt-2 flex items-center justify-between gap-2 rounded-2xl border border-accent bg-accent-soft-muted px-3 py-2 text-sm text-ink-500">
                     <span className="break-all">{result.resultsUrl}</span>
                     <button
                       type="button"
-                      className="text-xs font-semibold text-rose-600 hover:text-rose-700 focus-ring touch-manipulation"
-                      onClick={() => handleCopy(result.resultsUrl, 'Results link')}
+                      className={[
+                        'text-xs font-semibold text-accent transition-colors focus-ring touch-manipulation rounded-full px-2.5 py-1',
+                        copiedKey === 'results'
+                          ? 'bg-accent-soft-strong text-accent-strong'
+                          : 'hover-accent-soft hover-text-accent-strong'
+                      ]
+                        .filter(Boolean)
+                        .join(' ')}
+                      onClick={() => handleCopy(result.resultsUrl, 'Results link', 'results')}
                     >
-                      <FontAwesomeIcon icon={faCopy} aria-hidden="true" /> Copy
+                      <FontAwesomeIcon icon={faCopy} aria-hidden="true" />{' '}
+                      {copiedKey === 'results' ? 'Copied' : 'Copy'}
                     </button>
                   </div>
-                  <p className="mt-2 text-xs text-rose-600">
+                  <p className="mt-2 text-xs text-accent">
                     Save this link — it’s only shown once.
                   </p>
                 </div>

@@ -6,6 +6,7 @@ import type {
   ValentinePublicConfig,
   ValentineSubmission
 } from './types';
+import type { ThemeKey } from './themes';
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
 
@@ -16,7 +17,15 @@ export type ConfigResult =
   | { ok: false; error: string };
 
 export type ResultsResult =
-  | { ok: true; results: { toName: string; message: string; submissions: ValentineSubmission[] } }
+  | {
+      ok: true;
+      results: {
+        toName: string;
+        message: string;
+        submissions: ValentineSubmission[];
+        theme?: ThemeKey;
+      };
+    }
   | { ok: false; error: string };
 
 export async function submitSelection(

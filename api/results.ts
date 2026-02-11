@@ -1,6 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kvGet } from '../src/server/kv.js';
 import { hashToken, isValidSlug, timingSafeEqualHex } from '../src/server/security.js';
+import { DEFAULT_THEME, isThemeKey } from '../src/lib/themes.js';
+import type { ThemeKey } from '../src/lib/themes.js';
 import type { ValentineSubmission } from '../src/lib/types.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -27,6 +29,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         toName: string;
         message: string;
         adminTokenHash: string;
+        theme?: string;
       }
     | null;
   try {
@@ -55,12 +58,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  const theme: ThemeKey = isThemeKey(config.theme ?? '') ? (config.theme as ThemeKey) : DEFAULT_THEME;
+
   res.status(200).json({
     ok: true,
     results: {
       toName: config.toName,
       message: config.message,
-      submissions
+      submissions,
+      theme
     }
   });
 }

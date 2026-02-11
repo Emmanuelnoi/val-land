@@ -5,6 +5,8 @@ import type { ValentineSubmission } from '../lib/types';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTriangleExclamation } from '@fortawesome/free-solid-svg-icons';
 import { Link } from '../router';
+import { DEFAULT_THEME, type ThemeKey } from '../lib/themes';
+import { useTheme } from '../theme';
 
 type ResultsProps = {
   slug: string;
@@ -15,9 +17,11 @@ type ResultsState = {
   toName: string;
   message: string;
   submissions: ValentineSubmission[];
+  theme?: ThemeKey;
 };
 
 export default function Results({ slug, adminKey }: ResultsProps) {
+  const { setTheme } = useTheme();
   const [activeKey, setActiveKey] = useState(() => adminKey ?? '');
   const [data, setData] = useState<ResultsState | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -51,8 +55,10 @@ export default function Results({ slug, adminKey }: ResultsProps) {
       if (!result.ok) {
         setError(result.error);
         setData(null);
+        setTheme(DEFAULT_THEME);
       } else {
         setData(result.results);
+        setTheme(result.results.theme ?? DEFAULT_THEME);
         if (typeof window !== 'undefined' && adminKey) {
           const url = new URL(window.location.href);
           url.searchParams.delete('key');
@@ -65,16 +71,16 @@ export default function Results({ slug, adminKey }: ResultsProps) {
     return () => {
       isActive = false;
     };
-  }, [slug, activeKey, adminKey]);
+  }, [slug, activeKey, adminKey, setTheme]);
 
   if (loading) {
     return (
       <div className="flex flex-1 flex-col justify-center">
         <Card className="mx-auto w-full max-w-3xl">
           <div className="space-y-3">
-            <div className="h-6 w-2/3 animate-pulse rounded-full bg-rose-100" />
-            <div className="h-4 w-full animate-pulse rounded-full bg-rose-50" />
-            <div className="h-4 w-5/6 animate-pulse rounded-full bg-rose-50" />
+            <div className="h-6 w-2/3 animate-pulse rounded-full bg-accent-soft-strong" />
+            <div className="h-4 w-full animate-pulse rounded-full bg-accent-soft" />
+            <div className="h-4 w-5/6 animate-pulse rounded-full bg-accent-soft" />
           </div>
         </Card>
       </div>
@@ -85,14 +91,14 @@ export default function Results({ slug, adminKey }: ResultsProps) {
     return (
       <div className="flex flex-1 flex-col justify-center">
         <Card className="mx-auto w-full max-w-3xl">
-          <div className="flex items-start gap-3 text-sm text-rose-700">
+          <div className="flex items-start gap-3 text-sm text-accent-strong">
             <FontAwesomeIcon icon={faTriangleExclamation} className="mt-0.5" aria-hidden="true" />
             <div>
               <p className="font-semibold">Invalid or missing key.</p>
-              <p className="text-rose-700/80">{error ?? 'Please check the link and try again.'}</p>
+              <p className="text-accent-muted">{error ?? 'Please check the link and try again.'}</p>
               <Link
                 to="/create"
-                className="mt-3 inline-flex text-sm font-semibold text-rose-600 hover:text-rose-700 focus-ring touch-manipulation"
+                className="mt-3 inline-flex text-sm font-semibold text-accent hover-text-accent-strong focus-ring touch-manipulation"
               >
                 Create a New Valentine
               </Link>

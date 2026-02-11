@@ -1,15 +1,21 @@
 import type { ReactNode } from 'react';
+import type { ThemeKey } from '../lib/themes';
 
 type PageShellProps = {
   children: ReactNode;
   background?: 'romance' | 'sparkles';
+  theme?: ThemeKey;
 };
 
-export default function PageShell({ children, background = 'romance' }: PageShellProps) {
+export default function PageShell({
+  children,
+  background = 'romance',
+  theme = 'valentine'
+}: PageShellProps) {
   const bgClass = background === 'sparkles' ? 'bg-sparkles' : 'bg-romance';
 
   return (
-    <div className={`${bgClass} valentine-shell min-h-screen`}>
+    <div className={`${bgClass} valentine-shell min-h-screen`} data-theme={theme}>
       <a href="#main-content" className="skip-link">
         Skip to content
       </a>

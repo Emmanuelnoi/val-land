@@ -1,3 +1,5 @@
+import type { ThemeKey } from './themes';
+
 export type Gift = {
   id: string;
   title: string;
@@ -19,6 +21,7 @@ export type ValentinePublicConfig = {
   message: string;
   gifts: Gift[];
   createdAt: string;
+  theme: ThemeKey;
 };
 
 export type ValentineCreatePayload = {
@@ -26,6 +29,7 @@ export type ValentineCreatePayload = {
   message: string;
   gifts: Gift[];
   creatorDiscordWebhookUrl?: string;
+  theme: ThemeKey;
 };
 
 export type ValentineCreateResult = {

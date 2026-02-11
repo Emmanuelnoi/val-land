@@ -20,9 +20,9 @@ export default function NameInput({
     : { defaultValue: value };
 
   return (
-    <label className="flex w-full flex-col gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-rose-500/80">
+    <label className="flex w-full flex-col gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-accent-muted opacity-80">
       <span className="flex items-center gap-2 text-[11px]">
-        <FontAwesomeIcon icon={faUser} className="text-rose-400" aria-hidden="true" />
+        <FontAwesomeIcon icon={faUser} className="text-accent-muted" aria-hidden="true" />
         Recipient Name
       </span>
       <div className="input-shell">

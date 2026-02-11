@@ -8,6 +8,7 @@ A modern Valentine-themed single-page React app with a public creator flow and D
 - **Share link** for recipients at `/v/:slug`
 - **Private results link** at `/v/:slug/results?key=...` (shown once)
 - **Optional creator Discord notifications** per Valentine
+- **Theme packs** (Valentine, Birthday, Sage) for multiple occasions
 
 ## Install & Run
 
@@ -24,7 +25,7 @@ npm run dev:api
 
 ## Creator Flow
 
-1. Visit `/create` and fill in the recipient name, message, and gifts.
+1. Visit `/create`, choose a theme, and fill in the recipient name, message, and gifts.
 2. (Optional) Add your Discord webhook for notifications.
 3. Generate a **share link** (send to recipient).
 4. Save the **results link** (only shown once).

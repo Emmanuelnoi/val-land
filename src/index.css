@@ -13,7 +13,7 @@
     @apply bg-cream-50 text-ink-500 font-sans antialiased;
     text-rendering: optimizeLegibility;
     font-feature-settings: "ss01" 1, "cv02" 1;
-    -webkit-tap-highlight-color: rgba(255, 170, 200, 0.3);
+    -webkit-tap-highlight-color: var(--accent-soft-muted);
   }
 
   h1, h2, h3, h4 {
@@ -22,7 +22,106 @@
   }
 
   ::selection {
-    background: #ffb9cf;
+    background: var(--accent-border-strong);
+  }
+
+  :root {
+    --accent-1: #f05d88;
+    --accent-2: #ff90b3;
+    --accent-3: #d94873;
+    --accent-text: #d94873;
+    --accent-text-strong: #b43a5e;
+    --accent-muted: #ff90b3;
+    --accent-soft: #fff0f5;
+    --accent-soft-strong: #ffdbe7;
+    --accent-soft-muted: rgba(255, 240, 245, 0.6);
+    --accent-soft-faint: rgba(255, 240, 245, 0.5);
+    --accent-border: #ffdbe7;
+    --accent-border-strong: #ffb9cf;
+    --accent-border-muted: rgba(255, 219, 231, 0.8);
+    --accent-icon: #f05d88;
+    --focus-ring: #ffb9cf;
+    --chip-bg: rgba(255, 255, 255, 0.8);
+    --chip-border: rgba(255, 200, 215, 0.6);
+    --chip-text: #d94873;
+    --card-border-1: rgba(255, 180, 205, 0.6);
+    --card-border-2: rgba(255, 235, 215, 0.6);
+    --bg-romance-r1: rgba(255, 208, 225, 0.35);
+    --bg-romance-r2: rgba(255, 228, 210, 0.25);
+    --bg-romance-g1: rgba(255, 250, 246, 0.98);
+    --bg-romance-g2: rgba(255, 238, 246, 0.94);
+    --bg-romance-g3: rgba(255, 246, 236, 0.96);
+    --bg-sparkles-r1: rgba(255, 200, 224, 0.3);
+    --bg-sparkles-r2: rgba(255, 230, 210, 0.26);
+    --bg-sparkles-g1: rgba(255, 251, 248, 0.98);
+    --bg-sparkles-g2: rgba(255, 240, 248, 0.95);
+    --bg-sparkles-g3: rgba(255, 248, 238, 0.98);
+  }
+
+  [data-theme="birthday"] {
+    --accent-1: #ff8a5b;
+    --accent-2: #ffd166;
+    --accent-3: #ff6b6b;
+    --accent-text: #e0663a;
+    --accent-text-strong: #b84a2b;
+    --accent-muted: #ffab7a;
+    --accent-soft: #fff3e8;
+    --accent-soft-strong: #ffe0cf;
+    --accent-soft-muted: rgba(255, 243, 232, 0.6);
+    --accent-soft-faint: rgba(255, 243, 232, 0.5);
+    --accent-border: #ffd1bd;
+    --accent-border-strong: #ffc1a6;
+    --accent-border-muted: rgba(255, 209, 189, 0.8);
+    --accent-icon: #ff8a5b;
+    --focus-ring: #ffd166;
+    --chip-bg: rgba(255, 255, 255, 0.84);
+    --chip-border: rgba(255, 215, 190, 0.65);
+    --chip-text: #e0663a;
+    --card-border-1: rgba(255, 190, 160, 0.55);
+    --card-border-2: rgba(255, 228, 190, 0.55);
+    --bg-romance-r1: rgba(255, 214, 176, 0.35);
+    --bg-romance-r2: rgba(255, 235, 200, 0.3);
+    --bg-romance-g1: rgba(255, 252, 248, 0.98);
+    --bg-romance-g2: rgba(255, 239, 230, 0.95);
+    --bg-romance-g3: rgba(255, 246, 238, 0.98);
+    --bg-sparkles-r1: rgba(255, 215, 190, 0.3);
+    --bg-sparkles-r2: rgba(255, 236, 205, 0.26);
+    --bg-sparkles-g1: rgba(255, 252, 248, 0.98);
+    --bg-sparkles-g2: rgba(255, 242, 232, 0.96);
+    --bg-sparkles-g3: rgba(255, 247, 238, 0.98);
+  }
+
+  [data-theme="sage"] {
+    --accent-1: #6c8f7d;
+    --accent-2: #a8c9a3;
+    --accent-3: #4e6b60;
+    --accent-text: #4e6b60;
+    --accent-text-strong: #3b544b;
+    --accent-muted: #8fb4a2;
+    --accent-soft: #f1f7f3;
+    --accent-soft-strong: #e3efe7;
+    --accent-soft-muted: rgba(241, 247, 243, 0.6);
+    --accent-soft-faint: rgba(241, 247, 243, 0.5);
+    --accent-border: #d5e6db;
+    --accent-border-strong: #c4dbc9;
+    --accent-border-muted: rgba(213, 230, 219, 0.8);
+    --accent-icon: #6c8f7d;
+    --focus-ring: #a8c9a3;
+    --chip-bg: rgba(255, 255, 255, 0.86);
+    --chip-border: rgba(200, 220, 210, 0.6);
+    --chip-text: #4e6b60;
+    --card-border-1: rgba(175, 205, 190, 0.55);
+    --card-border-2: rgba(230, 240, 235, 0.6);
+    --bg-romance-r1: rgba(205, 228, 215, 0.35);
+    --bg-romance-r2: rgba(225, 238, 230, 0.3);
+    --bg-romance-g1: rgba(249, 252, 250, 0.98);
+    --bg-romance-g2: rgba(236, 245, 240, 0.95);
+    --bg-romance-g3: rgba(244, 250, 247, 0.98);
+    --bg-sparkles-r1: rgba(210, 230, 220, 0.3);
+    --bg-sparkles-r2: rgba(230, 242, 235, 0.26);
+    --bg-sparkles-g1: rgba(250, 253, 251, 0.98);
+    --bg-sparkles-g2: rgba(238, 246, 241, 0.96);
+    --bg-sparkles-g3: rgba(245, 251, 248, 0.98);
   }
 }
 
@@ -50,7 +149,12 @@
   }
 
   .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-300 focus-visible:ring-offset-2 focus-visible:ring-offset-cream-50;
+    @apply focus-visible:outline-none;
+  }
+
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   .valentine-card {
@@ -67,7 +171,7 @@
     inset: 0;
     padding: 1px;
     border-radius: 1.5rem;
-    background: linear-gradient(135deg, rgba(255, 180, 205, 0.6), rgba(255, 235, 215, 0.6));
+    background: linear-gradient(135deg, var(--card-border-1), var(--card-border-2));
     mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
     mask-composite: exclude;
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -76,11 +180,14 @@
   }
 
   .valentine-chip {
-    @apply inline-flex items-center gap-2 rounded-full border border-white/70 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-rose-600 shadow-soft;
+    @apply inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] shadow-soft;
+    border: 1px solid var(--chip-border);
+    background: var(--chip-bg);
+    color: var(--chip-text);
   }
 
   .btn-primary {
-    background: linear-gradient(120deg, #f05d88, #ff90b3 45%, #d94873 100%);
+    background: linear-gradient(120deg, var(--accent-1), var(--accent-2) 45%, var(--accent-3) 100%);
     background-size: 200% 200%;
     color: #fff;
     box-shadow: 0 18px 40px -26px rgba(20, 9, 24, 0.6);
@@ -93,12 +200,12 @@
 
   .btn-secondary {
     background: rgba(255, 255, 255, 0.8);
-    border: 1px solid rgba(255, 200, 215, 0.6);
+    border: 1px solid var(--accent-border);
     color: #3a2637;
   }
 
   .btn-secondary:hover {
-    border-color: rgba(255, 160, 190, 0.8);
+    border-color: var(--accent-border-strong);
     transform: translateY(-2px);
   }
 
@@ -120,13 +227,18 @@
   }
 
   .input-shell:focus-within {
-    border-color: rgba(255, 160, 190, 0.85);
+    border-color: var(--accent-border-strong);
     box-shadow: 0 16px 30px -26px rgba(20, 9, 24, 0.6);
   }
 
   .link-soft {
-    @apply text-sm font-medium text-rose-600 hover:text-rose-700;
+    @apply text-sm font-medium;
+    color: var(--accent-text);
     touch-action: manipulation;
+  }
+
+  .link-soft:hover {
+    color: var(--accent-text-strong);
   }
 
   .skip-link {
@@ -172,9 +284,61 @@
 
 @layer utilities {
   .text-rose-gradient {
-    background: linear-gradient(110deg, #f05d88 0%, #ff7aa1 45%, #d94873 100%);
+    background: linear-gradient(110deg, var(--accent-1) 0%, var(--accent-2) 45%, var(--accent-3) 100%);
     -webkit-background-clip: text;
     color: transparent;
+  }
+
+  .text-accent {
+    color: var(--accent-text);
+  }
+
+  .text-accent-strong {
+    color: var(--accent-text-strong);
+  }
+
+  .text-accent-muted {
+    color: var(--accent-muted);
+  }
+
+  .bg-accent {
+    background-color: var(--accent-1);
+  }
+
+  .bg-accent-soft {
+    background-color: var(--accent-soft);
+  }
+
+  .bg-accent-soft-strong {
+    background-color: var(--accent-soft-strong);
+  }
+
+  .bg-accent-soft-muted {
+    background-color: var(--accent-soft-muted);
+  }
+
+  .bg-accent-soft-faint {
+    background-color: var(--accent-soft-faint);
+  }
+
+  .border-accent {
+    border-color: var(--accent-border);
+  }
+
+  .border-accent-strong {
+    border-color: var(--accent-border-strong);
+  }
+
+  .border-accent-muted {
+    border-color: var(--accent-border-muted);
+  }
+
+  .hover-accent-soft:hover {
+    background-color: var(--accent-soft);
+  }
+
+  .hover-text-accent-strong:hover {
+    color: var(--accent-text-strong);
   }
 
   .text-shadow-soft {
@@ -189,16 +353,16 @@
 
   .bg-romance {
     background-image:
-      radial-gradient(640px 260px at 85% 10%, rgba(255, 208, 225, 0.35), transparent 60%),
-      radial-gradient(520px 240px at 10% 80%, rgba(255, 228, 210, 0.25), transparent 60%),
-      linear-gradient(140deg, rgba(255, 250, 246, 0.98), rgba(255, 238, 246, 0.94) 52%, rgba(255, 246, 236, 0.96));
+      radial-gradient(640px 260px at 85% 10%, var(--bg-romance-r1), transparent 60%),
+      radial-gradient(520px 240px at 10% 80%, var(--bg-romance-r2), transparent 60%),
+      linear-gradient(140deg, var(--bg-romance-g1), var(--bg-romance-g2) 52%, var(--bg-romance-g3));
   }
 
   .bg-sparkles {
     background-image:
-      radial-gradient(520px 240px at 70% 15%, rgba(255, 200, 224, 0.3), transparent 60%),
-      radial-gradient(520px 260px at 18% 78%, rgba(255, 230, 210, 0.26), transparent 60%),
-      linear-gradient(150deg, rgba(255, 251, 248, 0.98), rgba(255, 240, 248, 0.95) 42%, rgba(255, 248, 238, 0.98));
+      radial-gradient(520px 240px at 70% 15%, var(--bg-sparkles-r1), transparent 60%),
+      radial-gradient(520px 260px at 18% 78%, var(--bg-sparkles-r2), transparent 60%),
+      linear-gradient(150deg, var(--bg-sparkles-g1), var(--bg-sparkles-g2) 42%, var(--bg-sparkles-g3));
   }
 
   @media (prefers-reduced-motion: reduce) {
