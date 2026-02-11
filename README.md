@@ -86,6 +86,7 @@ It validates input, rate limits requests, and sends a Discord embed notification
 - `GET /api/config?slug=...`
 - `POST /api/submit`
 - `GET /api/results?slug=...&key=...`
+- `GET /api/health/kv` (connectivity check)
 
 ### Security Notes
 
