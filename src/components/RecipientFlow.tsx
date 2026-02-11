@@ -134,9 +134,9 @@ function getThemeCopy(themeFamily: 'valentine' | 'birthday' | 'sage', toName: st
       return {
         collectionLabel: 'Gift Selection',
         headline: name ? `${name}, Want A Little Surprise?` : 'Want A Little Surprise?',
-        fallbackMessage: 'A calm, thoughtful moment — just for you.',
+        fallbackMessage: 'A curated moment, just for you.',
         giftsTitle: 'Pick Three',
-        giftsSubtitle: 'Three thoughtful picks, one calm yes.',
+        giftsSubtitle: 'Three polished picks, one easy yes.',
         thanksTitle: 'Selections Confirmed',
         thanksSubtitle: 'Your picks are set. Here is the recap.'
       };

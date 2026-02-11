@@ -90,7 +90,7 @@ export default function Create() {
       case 'birthday':
         return 'Build a celebratory page with gifts, a message, and optional Discord notifications.';
       case 'sage':
-        return 'Build a calm, thoughtful page with gifts, a message, and optional Discord notifications.';
+        return 'Build a flexible page with gifts, a message, and optional Discord notifications.';
       case 'valentine':
       default:
         return 'Build a personalized page with gifts, a message, and optional Discord notifications.';
@@ -119,7 +119,12 @@ export default function Create() {
     () => [
       { label: 'Valentine', themes: THEMES.filter((theme) => theme.key === 'valentine') },
       { label: 'Birthday', themes: THEMES.filter((theme) => theme.key.startsWith('birthday')) },
-      { label: 'Sage', themes: THEMES.filter((theme) => theme.key.startsWith('sage')) }
+      {
+        label: 'Primary + Mono',
+        themes: THEMES.filter(
+          (theme) => theme.key.startsWith('primary') || theme.key.startsWith('mono')
+        )
+      }
     ],
     []
   );
