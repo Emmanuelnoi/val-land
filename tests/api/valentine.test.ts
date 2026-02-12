@@ -76,7 +76,7 @@ describe('valentine api', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-02-10T00:00:00.000Z'));
 
-    process.env.DISCORD_WEBHOOK_URL = 'https://example.com/webhook';
+    process.env.DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/test/token';
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
 
@@ -102,7 +102,7 @@ describe('valentine api', () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date('2026-02-10T00:00:00.000Z'));
 
-    process.env.DISCORD_WEBHOOK_URL = 'https://example.com/webhook';
+    process.env.DISCORD_WEBHOOK_URL = 'https://discord.com/api/webhooks/test/token';
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
 

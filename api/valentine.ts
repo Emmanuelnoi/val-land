@@ -1,4 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import {
+  createRateLimiter,
+  getClientIp,
+  hasValidChallenge,
+  isDiscordWebhook,
+  sanitizePublicHttpsUrl,
+  sanitizeText
+} from '../src/server/security.js';
 
 type IncomingGift = {
   id?: string;
@@ -12,18 +20,13 @@ type IncomingPayload = {
   createdAt?: string;
 };
 
-type RateEntry = {
-  count: number;
-  firstAt: number;
-  lastAt: number;
-};
-
-const RATE_LIMIT_MAX = 5;
-const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
-const MIN_INTERVAL_MS = 10 * 1000;
-const RATE_STORE_TTL_MS = RATE_LIMIT_WINDOW_MS * 2;
-const RATE_STORE_MAX = 1000;
-const rateStore = new Map<string, RateEntry>();
+const limiter = createRateLimiter({
+  max: 5,
+  windowMs: 60 * 60 * 1000,
+  minIntervalMs: 10_000,
+  namespace: 'legacy-submit',
+  blockOnBackendFailure: true
+});
 
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 5000) {
   const controller = new AbortController();
@@ -32,80 +35,6 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 5000
     return await fetch(url, { ...init, signal: controller.signal });
   } finally {
     clearTimeout(timer);
-  }
-}
-
-function getClientIp(req: VercelRequest): string {
-  const forwarded = req.headers['x-forwarded-for'];
-  if (typeof forwarded === 'string' && forwarded.length > 0) {
-    return forwarded.split(',')[0].trim();
-  }
-  if (Array.isArray(forwarded) && forwarded.length > 0) {
-    return forwarded[0];
-  }
-  return req.socket?.remoteAddress ?? 'unknown';
-}
-
-function pruneRateStore(now: number) {
-  for (const [key, entry] of rateStore.entries()) {
-    if (now - entry.lastAt > RATE_STORE_TTL_MS) {
-      rateStore.delete(key);
-    }
-  }
-
-  if (rateStore.size <= RATE_STORE_MAX) return;
-
-  const sorted = Array.from(rateStore.entries()).sort((a, b) => a[1].lastAt - b[1].lastAt);
-  const overflow = rateStore.size - RATE_STORE_MAX;
-  for (let i = 0; i < overflow; i += 1) {
-    rateStore.delete(sorted[i][0]);
-  }
-}
-
-function enforceRateLimit(ip: string): { limited: boolean; retryAfter: number } {
-  const now = Date.now();
-  pruneRateStore(now);
-  const entry = rateStore.get(ip);
-
-  if (!entry || now - entry.firstAt > RATE_LIMIT_WINDOW_MS) {
-    const fresh = { count: 0, firstAt: now, lastAt: 0 };
-    rateStore.set(ip, fresh);
-  }
-
-  const active = rateStore.get(ip)!;
-  const sinceLast = active.lastAt ? now - active.lastAt : Number.POSITIVE_INFINITY;
-  if (sinceLast < MIN_INTERVAL_MS) {
-    return { limited: true, retryAfter: Math.ceil((MIN_INTERVAL_MS - sinceLast) / 1000) };
-  }
-
-  if (active.count >= RATE_LIMIT_MAX) {
-    const windowRemaining = RATE_LIMIT_WINDOW_MS - (now - active.firstAt);
-    return { limited: true, retryAfter: Math.ceil(windowRemaining / 1000) };
-  }
-
-  active.count += 1;
-  active.lastAt = now;
-  rateStore.set(ip, active);
-
-  return { limited: false, retryAfter: 0 };
-}
-
-function sanitizeText(value: string, maxLength: number): string {
-  return value
-    .replace(/[\[\]()_*~`>#|<>]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, maxLength);
-}
-
-function sanitizeUrl(value?: string): string | undefined {
-  if (!value) return undefined;
-  try {
-    const url = new URL(value);
-    if (url.protocol !== 'http:' && url.protocol !== 'https:') return undefined;
-    return url.toString();
-  } catch (error) {
-    return undefined;
   }
 }
 
@@ -131,6 +60,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
+  if (!hasValidChallenge(req)) {
+    res.status(403).json({ ok: false, error: 'Challenge failed' });
+    return;
+  }
+
   const parsed = parsePayload(req.body);
   if (!parsed) {
     res.status(400).json({ ok: false, error: 'Invalid payload' });
@@ -138,7 +72,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const ip = getClientIp(req);
-  const rate = enforceRateLimit(ip);
+  const rate = await limiter(ip);
   if (rate.limited) {
     res.setHeader('Retry-After', rate.retryAfter.toString());
     res.status(429).json({ ok: false, error: 'Rate limit exceeded' });
@@ -158,7 +92,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const title = typeof gift?.title === 'string' ? gift.title : `Gift ${index + 1}`;
     return {
       title: sanitizeText(title, 80) || `Gift ${index + 1}`,
-      linkUrl: sanitizeUrl(typeof gift?.linkUrl === 'string' ? gift.linkUrl : undefined)
+      linkUrl: sanitizePublicHttpsUrl(typeof gift?.linkUrl === 'string' ? gift.linkUrl : undefined)
     };
   });
 
@@ -169,7 +103,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     : createdAtDate.toISOString();
 
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
-  if (!webhookUrl) {
+  if (!webhookUrl || !isDiscordWebhook(webhookUrl)) {
     res.status(500).json({ ok: false, error: 'Server not configured' });
     return;
   }

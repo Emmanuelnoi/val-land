@@ -20,7 +20,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const isDarkTheme = theme === 'midnight' || theme === 'lavender-noir';
     const themeColor = isDarkTheme ? '#0b0f18' : '#f6ebf1';
 
-    document.documentElement.style.colorScheme = isDarkTheme ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-color-scheme', isDarkTheme ? 'dark' : 'light');
 
     const metaThemeColor = document.querySelector('meta[name="theme-color"]');
     if (metaThemeColor) {

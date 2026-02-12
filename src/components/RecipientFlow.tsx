@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
-import type { CSSProperties } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faArrowRight,
@@ -52,12 +51,8 @@ const initialState: AppState = { view: 'ASK' };
 
 type ConfettiPiece = {
   id: string;
-  x: number;
-  size: number;
-  delay: number;
-  duration: number;
-  rotate: number;
-  color: string;
+  variant: number;
+  tone: number;
 };
 
 type ConfettiBurst = {
@@ -67,6 +62,8 @@ type ConfettiBurst = {
 
 const CONFETTI_PIECES = 54;
 const REQUIRED_GIFTS = 3;
+const CONFETTI_VARIANTS = 12;
+const CONFETTI_TONES = 6;
 
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -98,16 +95,12 @@ function reducer(state: AppState, action: Action): AppState {
   }
 }
 
-function createConfettiBurst(colors: string[]): ConfettiBurst {
+function createConfettiBurst(): ConfettiBurst {
   const burstId = `burst_${Math.random().toString(16).slice(2)}`;
   const pieces = Array.from({ length: CONFETTI_PIECES }).map((_, index) => ({
     id: `${burstId}_${index}`,
-    x: Math.round(10 + Math.random() * 80),
-    size: Math.round(7 + Math.random() * 8),
-    delay: Math.round(Math.random() * 300),
-    duration: Math.round(2000 + Math.random() * 1400),
-    rotate: Math.round(Math.random() * 360),
-    color: colors[index % colors.length]
+    variant: Math.floor(Math.random() * CONFETTI_VARIANTS),
+    tone: index % CONFETTI_TONES
   }));
 
   return { id: burstId, pieces };
@@ -160,7 +153,6 @@ function getThemeCopy(themeFamily: 'valentine' | 'birthday' | 'sage', toName: st
 
 export default function RecipientFlow({ config, onSubmit, showCreateLink = true }: RecipientFlowProps) {
   const { activeTheme } = useTheme();
-  const confettiColors = useMemo(() => activeTheme.confetti, [activeTheme.confetti]);
   const themeCopy = useMemo(
     () => getThemeCopy(getThemeFamily(activeTheme.key), config.toName),
     [activeTheme.key, config.toName]
@@ -199,10 +191,10 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
   }, [state]);
 
   const triggerConfetti = () => {
-    const burst = createConfettiBurst(confettiColors);
+    const burst = createConfettiBurst();
     setConfettiBursts((prev) => [...prev, burst]);
     window.setTimeout(() => {
-      const followUp = createConfettiBurst(confettiColors);
+      const followUp = createConfettiBurst();
       setConfettiBursts((prev) => [...prev, followUp]);
       window.setTimeout(() => {
         setConfettiBursts((prev) =>
@@ -298,8 +290,7 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
       const temp = document.createElement('textarea');
       temp.value = url;
       temp.setAttribute('readonly', '');
-      temp.style.position = 'absolute';
-      temp.style.left = '-9999px';
+      temp.className = 'clipboard-buffer';
       document.body.appendChild(temp);
       temp.select();
       document.execCommand('copy');
@@ -320,17 +311,7 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
           burst.pieces.map((piece) => (
             <span
               key={piece.id}
-              className="confetti-piece"
-              style={
-                {
-                  '--x': `${piece.x}%`,
-                  '--size': `${piece.size}px`,
-                  '--delay': `${piece.delay}ms`,
-                  '--duration': `${piece.duration}ms`,
-                  '--rot': `${piece.rotate}deg`,
-                  '--color': piece.color
-                } as CSSProperties
-              }
+              className={`confetti-piece confetti-variant-${piece.variant} confetti-tone-${piece.tone}`}
             />
           ))
         )}

@@ -99,14 +99,29 @@ function createGiftForm(): GiftForm {
   };
 }
 
-function isHttpUrl(value: string) {
+function isPublicHttpsUrl(value: string) {
   if (!value) return false;
   try {
     const url = new URL(value);
-    return url.protocol === 'http:' || url.protocol === 'https:';
+    if (url.protocol !== 'https:') return false;
+    const hostname = url.hostname.toLowerCase();
+    if (
+      hostname === 'localhost' ||
+      hostname.endsWith('.localhost') ||
+      hostname.endsWith('.local') ||
+      hostname === '127.0.0.1' ||
+      hostname === '::1'
+    ) {
+      return false;
+    }
+    return true;
   } catch (error) {
     return false;
   }
+}
+
+function getThemePreviewClass(themeKey: ThemeKey) {
+  return `theme-preview-chip theme-preview-chip-${themeKey}`;
 }
 
 export default function Create() {
@@ -268,10 +283,10 @@ export default function Create() {
       if (gift.description.length > MAX_DESCRIPTION)
         giftErrors.description = `Max ${MAX_DESCRIPTION} characters.`;
       if (!trimmedImageUrl) giftErrors.imageUrl = 'Image URL is required.';
-      if (trimmedImageUrl && !isHttpUrl(trimmedImageUrl))
-        giftErrors.imageUrl = 'Use a valid http(s) URL.';
-      if (trimmedLinkUrl && !isHttpUrl(trimmedLinkUrl))
-        giftErrors.linkUrl = 'Use a valid http(s) URL.';
+      if (trimmedImageUrl && !isPublicHttpsUrl(trimmedImageUrl))
+        giftErrors.imageUrl = 'Use a valid public https URL.';
+      if (trimmedLinkUrl && !isPublicHttpsUrl(trimmedLinkUrl))
+        giftErrors.linkUrl = 'Use a valid public https URL.';
       if (Object.keys(giftErrors).length > 0) {
         nextErrors.giftErrors[gift.formId] = giftErrors;
       }
@@ -341,8 +356,7 @@ export default function Create() {
         const temp = document.createElement('textarea');
         temp.value = value;
         temp.setAttribute('readonly', '');
-        temp.style.position = 'absolute';
-        temp.style.left = '-9999px';
+        temp.className = 'clipboard-buffer';
         document.body.appendChild(temp);
         temp.select();
         document.execCommand('copy');
@@ -454,13 +468,7 @@ export default function Create() {
                               </div>
                               <p className="mt-1 text-xs text-ink-300">{theme.description}</p>
                               <div className="mt-3 flex items-center gap-2">
-                                {theme.preview.map((color) => (
-                                  <span
-                                    key={`${theme.key}-${color}`}
-                                    className="h-3 w-3 rounded-full border border-white/80"
-                                    style={{ backgroundColor: color }}
-                                  />
-                                ))}
+                                <span className={getThemePreviewClass(theme.key)} aria-hidden="true" />
                               </div>
                             </button>
                           );
@@ -537,7 +545,7 @@ export default function Create() {
               <div className="space-y-4">
                 {gifts.map((gift, index) => {
                   const giftErrors = errors.giftErrors[gift.formId] || {};
-                  const previewOk = gift.imageUrl.trim() && isHttpUrl(gift.imageUrl.trim());
+                  const previewOk = gift.imageUrl.trim() && isPublicHttpsUrl(gift.imageUrl.trim());
                   return (
                     <div key={gift.formId} className="rounded-2xl border border-accent-muted bg-white/70 p-4">
                       <div className="flex items-center justify-between">

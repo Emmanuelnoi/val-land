@@ -2,13 +2,17 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kvGet, kvSet } from '../src/server/kv.js';
 import {
   createRateLimiter,
+  encryptSecret,
   generateSlug,
   generateToken,
   getClientIp,
+  hasValidChallenge,
   hashToken,
   isDiscordWebhook,
+  sanitizePublicHttpsUrl,
   sanitizeText,
-  sanitizeUrl
+  sanitizeUrl,
+  toSafeString
 } from '../src/server/security.js';
 import { normalizeThemeKey } from '../src/lib/themes.js';
 import type { ThemeKey } from '../src/lib/themes.js';
@@ -25,12 +29,27 @@ type IncomingPayload = {
 };
 
 const limiter = createRateLimiter({
-  max: 10,
+  max: 5,
   windowMs: 60 * 60 * 1000,
-  minIntervalMs: 5000
+  minIntervalMs: 10_000,
+  namespace: 'create',
+  blockOnBackendFailure: true
 });
 
 function getBaseUrl(req: VercelRequest): string {
+  const configured = process.env.APP_BASE_URL?.trim();
+  if (configured) {
+    const normalized = sanitizeUrl(configured);
+    if (normalized) {
+      return normalized.replace(/\/+$/, '');
+    }
+  }
+
+  // Never trust forwarded host/proto in production; use APP_BASE_URL there.
+  if (process.env.NODE_ENV === 'production') {
+    return '';
+  }
+
   const protoHeader = req.headers['x-forwarded-proto'];
   const hostHeader = req.headers['x-forwarded-host'] ?? req.headers.host;
   const proto =
@@ -43,14 +62,45 @@ function getBaseUrl(req: VercelRequest): string {
 
 function parsePayload(body: unknown): IncomingPayload | null {
   if (!body || typeof body !== 'object') return null;
-  return body as IncomingPayload;
+  const candidate = body as Record<string, unknown>;
+
+  if (candidate.toName !== undefined && typeof candidate.toName !== 'string') return null;
+  if (candidate.message !== undefined && typeof candidate.message !== 'string') return null;
+  if (candidate.theme !== undefined && typeof candidate.theme !== 'string') return null;
+  if (
+    candidate.creatorDiscordWebhookUrl !== undefined &&
+    typeof candidate.creatorDiscordWebhookUrl !== 'string'
+  )
+    return null;
+  if (candidate.gifts !== undefined && !Array.isArray(candidate.gifts)) return null;
+
+  const gifts = Array.isArray(candidate.gifts) ? candidate.gifts : undefined;
+  if (gifts) {
+    for (const gift of gifts) {
+      if (!gift || typeof gift !== 'object') return null;
+      const normalized = gift as Record<string, unknown>;
+      if (normalized.id !== undefined && typeof normalized.id !== 'string') return null;
+      if (normalized.title !== undefined && typeof normalized.title !== 'string') return null;
+      if (normalized.description !== undefined && typeof normalized.description !== 'string') return null;
+      if (normalized.imageUrl !== undefined && typeof normalized.imageUrl !== 'string') return null;
+      if (normalized.linkUrl !== undefined && typeof normalized.linkUrl !== 'string') return null;
+    }
+  }
+
+  return {
+    toName: candidate.toName as string | undefined,
+    message: candidate.message as string | undefined,
+    gifts: gifts as IncomingGift[] | undefined,
+    creatorDiscordWebhookUrl: candidate.creatorDiscordWebhookUrl as string | undefined,
+    theme: candidate.theme as string | undefined
+  };
 }
 
 function normalizeGift(gift: IncomingGift, index: number): Gift | null {
   const title = sanitizeText(gift.title ?? '', 60);
   const description = sanitizeText(gift.description ?? '', 140);
-  const imageUrl = sanitizeUrl(gift.imageUrl);
-  const linkUrl = sanitizeUrl(gift.linkUrl);
+  const imageUrl = sanitizePublicHttpsUrl(gift.imageUrl);
+  const linkUrl = sanitizePublicHttpsUrl(gift.linkUrl);
   const id = sanitizeText(gift.id ?? `gift-${index + 1}`, 40)
     .toLowerCase()
     .replace(/\s+/g, '-');
@@ -71,8 +121,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     res.status(405).json({ ok: false, error: 'Method not allowed' });
     return;
   }
+  res.setHeader('Cache-Control', 'no-store, private, max-age=0');
 
-  const rate = limiter(getClientIp(req));
+  if (!hasValidChallenge(req)) {
+    res.status(403).json({ ok: false, error: 'Challenge failed' });
+    return;
+  }
+
+  const rate = await limiter(getClientIp(req));
   if (rate.limited) {
     res.setHeader('Retry-After', rate.retryAfter.toString());
     res.status(429).json({ ok: false, error: 'Rate limit exceeded' });
@@ -85,8 +141,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const toName = sanitizeText(parsed.toName ?? '', 60);
-  const message = sanitizeText(parsed.message ?? '', 180);
+  const toName = sanitizeText(toSafeString(parsed.toName), 60);
+  const message = sanitizeText(toSafeString(parsed.message), 180);
   const theme: ThemeKey = normalizeThemeKey(parsed.theme);
 
   if (!toName || !message) {
@@ -110,14 +166,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     gifts.push(normalized);
   }
 
-  let creatorNotify: { type: 'discord'; webhookUrl: string } | undefined;
+  let creatorNotify: { type: 'discord'; webhookCiphertext: string } | undefined;
   if (parsed.creatorDiscordWebhookUrl) {
     const webhook = sanitizeUrl(parsed.creatorDiscordWebhookUrl);
     if (!webhook || !isDiscordWebhook(webhook)) {
       res.status(400).json({ ok: false, error: 'Invalid Discord webhook URL' });
       return;
     }
-    creatorNotify = { type: 'discord', webhookUrl: webhook };
+    const webhookCiphertext = encryptSecret(webhook);
+    if (!webhookCiphertext) {
+      res.status(500).json({ ok: false, error: 'Server not configured' });
+      return;
+    }
+    creatorNotify = { type: 'discord', webhookCiphertext };
   }
 
   const createdAt = new Date().toISOString();
@@ -167,7 +228,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     })(),
     resultsUrl: (() => {
       const baseUrl = getBaseUrl(req);
-      const path = `/v/${slug}/results?key=${adminToken}`;
+      const path = `/v/${slug}/results#key=${adminToken}`;
       return baseUrl ? `${baseUrl}${path}` : path;
     })()
   });

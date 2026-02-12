@@ -13,7 +13,7 @@ type RouterContextValue = {
 
 const RouterContext = React.createContext<RouterContextValue | null>(null);
 
-function parseRoute(pathname: string, search: string): Route {
+function parseRoute(pathname: string, _search: string, hash: string): Route {
   const trimmed = pathname.replace(/\/+$/, '') || '/';
   if (trimmed === '/') return { name: 'home' };
   if (trimmed === '/create') return { name: 'create' };
@@ -22,8 +22,8 @@ function parseRoute(pathname: string, search: string): Route {
   if (parts[0] === 'v' && parts[1]) {
     const slug = parts[1];
     if (parts[2] === 'results') {
-      const params = new URLSearchParams(search);
-      const key = params.get('key') ?? undefined;
+      const hashParams = new URLSearchParams(hash.startsWith('#') ? hash.slice(1) : hash);
+      const key = hashParams.get('key') ?? undefined;
       return { name: 'results', slug, key };
     }
     return { name: 'recipient', slug };
@@ -33,7 +33,7 @@ function parseRoute(pathname: string, search: string): Route {
 }
 
 export function RouterProvider({ children }: { children: React.ReactNode }) {
-  const getRoute = () => parseRoute(window.location.pathname, window.location.search);
+  const getRoute = () => parseRoute(window.location.pathname, window.location.search, window.location.hash);
   const [route, setRoute] = useState<Route>(getRoute);
 
   useEffect(() => {
@@ -43,9 +43,9 @@ export function RouterProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const navigate = useCallback((to: string) => {
-    if (to === window.location.pathname + window.location.search) return;
+    if (to === window.location.pathname + window.location.search + window.location.hash) return;
     window.history.pushState({}, '', to);
-    setRoute(parseRoute(window.location.pathname, window.location.search));
+    setRoute(parseRoute(window.location.pathname, window.location.search, window.location.hash));
   }, []);
 
   const value = useMemo(() => ({ route, navigate }), [route, navigate]);

@@ -1,9 +1,22 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kvGet } from '../src/server/kv.js';
-import { isValidSlug, sanitizeText, sanitizeUrl } from '../src/server/security.js';
+import {
+  createRateLimiter,
+  getClientIp,
+  isValidSlug,
+  sanitizePublicHttpsUrl,
+  sanitizeText
+} from '../src/server/security.js';
 import { normalizeThemeKey } from '../src/lib/themes.js';
 import type { ThemeKey } from '../src/lib/themes.js';
 import type { Gift, ValentinePublicConfig } from '../src/lib/types.js';
+
+const limiter = createRateLimiter({
+  max: 60,
+  windowMs: 10 * 60 * 1000,
+  minIntervalMs: 500,
+  namespace: 'config-read'
+});
 
 type StoredConfig = {
   toName?: unknown;
@@ -30,8 +43,12 @@ function normalizeConfig(value: StoredConfig): ValentinePublicConfig | null {
       typeof candidate.description === 'string' ? candidate.description : '',
       140
     );
-    const imageUrl = sanitizeUrl(typeof candidate.imageUrl === 'string' ? candidate.imageUrl : undefined);
-    const linkUrl = sanitizeUrl(typeof candidate.linkUrl === 'string' ? candidate.linkUrl : undefined);
+    const imageUrl = sanitizePublicHttpsUrl(
+      typeof candidate.imageUrl === 'string' ? candidate.imageUrl : undefined
+    );
+    const linkUrl = sanitizePublicHttpsUrl(
+      typeof candidate.linkUrl === 'string' ? candidate.linkUrl : undefined
+    );
     const id = sanitizeText(typeof candidate.id === 'string' ? candidate.id : '', 40)
       .toLowerCase()
       .replace(/\s+/g, '-');
@@ -65,6 +82,13 @@ function normalizeConfig(value: StoredConfig): ValentinePublicConfig | null {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     res.status(405).json({ ok: false, error: 'Method not allowed' });
+    return;
+  }
+
+  const rate = await limiter(getClientIp(req));
+  if (rate.limited) {
+    res.setHeader('Retry-After', rate.retryAfter.toString());
+    res.status(429).json({ ok: false, error: 'Rate limit exceeded' });
     return;
   }
 

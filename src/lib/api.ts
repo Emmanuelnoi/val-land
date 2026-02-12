@@ -143,9 +143,11 @@ export async function submitBySlug(
 
 export async function fetchResults(slug: string, key: string): Promise<ResultsResult> {
   try {
-    const response = await fetch(
-      `/api/results?slug=${encodeURIComponent(slug)}&key=${encodeURIComponent(key)}`
-    );
+    const response = await fetch('/api/results', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug, key })
+    });
     const data = (await response.json().catch(() => ({}))) as {
       ok?: boolean;
       error?: string;

@@ -1,12 +1,17 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'node:crypto';
-import { kvAppend, kvGet } from '../src/server/kv.js';
+import { kvAppend, kvGet, kvSet } from '../src/server/kv.js';
 import {
   createRateLimiter,
+  decryptSecret,
+  encryptSecret,
   getClientIp,
+  hasValidChallenge,
+  isDiscordWebhook,
   isValidSlug,
+  sanitizePublicHttpsUrl,
   sanitizeText,
-  sanitizeUrl
+  toSafeString
 } from '../src/server/security.js';
 import type { Gift, SelectedGift } from '../src/lib/types.js';
 
@@ -15,10 +20,18 @@ type IncomingPayload = {
   pickedGifts?: Array<{ id?: string }>;
 };
 
+type CreatorNotifyConfig = {
+  type: 'discord';
+  webhookCiphertext?: string;
+  webhookUrl?: string;
+};
+
 const limiter = createRateLimiter({
-  max: 20,
+  max: 12,
   windowMs: 60 * 60 * 1000,
-  minIntervalMs: 3000
+  minIntervalMs: 5000,
+  namespace: 'submit',
+  blockOnBackendFailure: true
 });
 
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 5000) {
@@ -33,18 +46,34 @@ async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 5000
 
 function parsePayload(body: unknown): IncomingPayload | null {
   if (!body || typeof body !== 'object') return null;
-  return body as IncomingPayload;
+  const candidate = body as Record<string, unknown>;
+  if (candidate.slug !== undefined && typeof candidate.slug !== 'string') return null;
+  if (candidate.pickedGifts !== undefined && !Array.isArray(candidate.pickedGifts)) return null;
+
+  const picks = Array.isArray(candidate.pickedGifts) ? candidate.pickedGifts : undefined;
+  if (picks) {
+    for (const pick of picks) {
+      if (!pick || typeof pick !== 'object') return null;
+      const normalized = pick as Record<string, unknown>;
+      if (normalized.id !== undefined && typeof normalized.id !== 'string') return null;
+    }
+  }
+
+  return {
+    slug: candidate.slug as string | undefined,
+    pickedGifts: picks as Array<{ id?: string }> | undefined
+  };
 }
 
 function pickGift(configGifts: Gift[], id: string): SelectedGift | null {
   const match = configGifts.find((gift) => gift.id === id);
   if (!match) return null;
-  const imageUrl = sanitizeUrl(match.imageUrl);
+  const imageUrl = sanitizePublicHttpsUrl(match.imageUrl);
   if (!imageUrl) return null;
   return {
     id: match.id,
     title: sanitizeText(match.title, 60),
-    linkUrl: sanitizeUrl(match.linkUrl),
+    linkUrl: sanitizePublicHttpsUrl(match.linkUrl),
     imageUrl
   };
 }
@@ -55,7 +84,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const rate = limiter(getClientIp(req));
+  if (!hasValidChallenge(req)) {
+    res.status(403).json({ ok: false, error: 'Challenge failed' });
+    return;
+  }
+
+  const rate = await limiter(getClientIp(req));
   if (rate.limited) {
     res.setHeader('Retry-After', rate.retryAfter.toString());
     res.status(429).json({ ok: false, error: 'Rate limit exceeded' });
@@ -85,7 +119,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         toName: string;
         message: string;
         gifts: Gift[];
-        creatorNotify?: { type: 'discord'; webhookUrl: string };
+        creatorNotify?: CreatorNotifyConfig;
+        [key: string]: unknown;
       }
     | null;
   try {
@@ -102,7 +137,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const pickedGifts: SelectedGift[] = [];
   for (const pick of picks) {
-    const id = sanitizeText(pick?.id ?? '', 40);
+    const id = sanitizeText(toSafeString(pick?.id), 40);
     const gift = id ? pickGift(config.gifts, id) : null;
     if (!gift) {
       res.status(400).json({ ok: false, error: 'Invalid gift selection' });
@@ -128,10 +163,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  if (config.creatorNotify?.type === 'discord' && config.creatorNotify.webhookUrl) {
+  let creatorWebhookUrl: string | undefined;
+  if (config.creatorNotify?.type === 'discord') {
+    if (typeof config.creatorNotify.webhookCiphertext === 'string') {
+      const decryptedWebhook = decryptSecret(config.creatorNotify.webhookCiphertext);
+      if (decryptedWebhook && isDiscordWebhook(decryptedWebhook)) {
+        creatorWebhookUrl = decryptedWebhook;
+      }
+    } else if (typeof config.creatorNotify.webhookUrl === 'string') {
+      if (isDiscordWebhook(config.creatorNotify.webhookUrl)) {
+        creatorWebhookUrl = config.creatorNotify.webhookUrl;
+      }
+
+      const webhookCiphertext = encryptSecret(config.creatorNotify.webhookUrl);
+      if (webhookCiphertext) {
+        config.creatorNotify = { type: 'discord', webhookCiphertext };
+        await kvSet(`val:cfg:${slug}`, config).catch(() => undefined);
+      }
+    }
+  }
+
+  if (creatorWebhookUrl) {
     const [gift1, gift2, gift3] = pickedGifts;
     await fetchWithTimeout(
-      config.creatorNotify.webhookUrl,
+      creatorWebhookUrl,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

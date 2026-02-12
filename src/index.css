@@ -58,6 +58,14 @@
     --bg-sparkles-g3: rgba(255, 248, 238, 0.98);
   }
 
+  [data-color-scheme="light"] {
+    color-scheme: light;
+  }
+
+  [data-color-scheme="dark"] {
+    color-scheme: dark;
+  }
+
   [data-theme="sunset-gold"] {
     --accent-1: #c95a3c;
     --accent-2: #f8c777;
@@ -809,6 +817,14 @@
     transform: translateY(0);
   }
 
+  .clipboard-buffer {
+    position: fixed;
+    top: -1000px;
+    left: -1000px;
+    opacity: 0;
+    pointer-events: none;
+  }
+
   .confetti-layer {
     position: fixed;
     inset: 0;
@@ -829,6 +845,54 @@
     transform: translateY(-10%) rotate(var(--rot, 0deg));
     animation: confetti-fall var(--duration, 1500ms) ease-out var(--delay, 0ms) forwards;
   }
+
+  .confetti-variant-0 { --x: 8%; --size: 8px; --duration: 1300ms; --delay: 0ms; --rot: 14deg; }
+  .confetti-variant-1 { --x: 16%; --size: 10px; --duration: 1500ms; --delay: 80ms; --rot: 25deg; }
+  .confetti-variant-2 { --x: 24%; --size: 9px; --duration: 1700ms; --delay: 40ms; --rot: 34deg; }
+  .confetti-variant-3 { --x: 33%; --size: 11px; --duration: 1600ms; --delay: 120ms; --rot: 44deg; }
+  .confetti-variant-4 { --x: 41%; --size: 7px; --duration: 1400ms; --delay: 70ms; --rot: 55deg; }
+  .confetti-variant-5 { --x: 50%; --size: 10px; --duration: 1800ms; --delay: 20ms; --rot: 64deg; }
+  .confetti-variant-6 { --x: 59%; --size: 9px; --duration: 1550ms; --delay: 95ms; --rot: 76deg; }
+  .confetti-variant-7 { --x: 67%; --size: 12px; --duration: 1750ms; --delay: 140ms; --rot: 84deg; }
+  .confetti-variant-8 { --x: 74%; --size: 8px; --duration: 1450ms; --delay: 50ms; --rot: 97deg; }
+  .confetti-variant-9 { --x: 82%; --size: 9px; --duration: 1650ms; --delay: 110ms; --rot: 108deg; }
+  .confetti-variant-10 { --x: 89%; --size: 11px; --duration: 1850ms; --delay: 30ms; --rot: 116deg; }
+  .confetti-variant-11 { --x: 95%; --size: 8px; --duration: 1500ms; --delay: 135ms; --rot: 128deg; }
+
+  .confetti-tone-0 { --color: var(--accent-1); }
+  .confetti-tone-1 { --color: var(--accent-2); }
+  .confetti-tone-2 { --color: var(--accent-3); }
+  .confetti-tone-3 { --color: var(--accent-border-strong); }
+  .confetti-tone-4 { --color: var(--accent-muted); }
+  .confetti-tone-5 { --color: #fff7f9; }
+
+  .theme-preview-chip {
+    width: 2.5rem;
+    height: 0.75rem;
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: inset 0 0 0 1px rgba(20, 9, 24, 0.08);
+  }
+
+  .theme-preview-chip-valentine { background: linear-gradient(110deg, #f05d88, #ff90b3, #ffd4b2); }
+  .theme-preview-chip-sunset-gold { background: linear-gradient(110deg, #c95a3c, #f8c777, #5b2a3c); }
+  .theme-preview-chip-peach-cream { background: linear-gradient(110deg, #f7b38a, #fff2dd, #a66a4d); }
+  .theme-preview-chip-birthday-neutral { background: linear-gradient(110deg, #ff8a5b, #ffd166, #ff6b6b); }
+  .theme-preview-chip-birthday-men { background: linear-gradient(110deg, #1f3b5f, #2f5aa6, #f2b03f); }
+  .theme-preview-chip-birthday-women { background: linear-gradient(110deg, #f26a8d, #ffd1dc, #c85a84); }
+  .theme-preview-chip-birthday-neon { background: linear-gradient(110deg, #1b2a69, #ff4fb8, #28d7ff); }
+  .theme-preview-chip-red { background: linear-gradient(110deg, #8f1d2c, #d75c44, #4f0e1d); }
+  .theme-preview-chip-orange { background: linear-gradient(110deg, #e26a1c, #ffc48a, #8a3a0f); }
+  .theme-preview-chip-yellow { background: linear-gradient(110deg, #d9931a, #ffe3a3, #9a5d12); }
+  .theme-preview-chip-green { background: linear-gradient(110deg, #2f8f6b, #a7e2c3, #1f5b46); }
+  .theme-preview-chip-blue { background: linear-gradient(110deg, #2f6fb5, #9bd3ff, #1b3458); }
+  .theme-preview-chip-purple { background: linear-gradient(110deg, #6c3bb8, #c5a6ff, #3b1a6f); }
+  .theme-preview-chip-ocean-mist { background: linear-gradient(110deg, #2c7d8f, #9ddde0, #204956); }
+  .theme-preview-chip-forest-ember { background: linear-gradient(110deg, #2f5f47, #d6a76a, #5b2f24); }
+  .theme-preview-chip-mono-dark { background: linear-gradient(110deg, #1f1f25, #b9a07a, #4b4b57); }
+  .theme-preview-chip-mono-light { background: linear-gradient(110deg, #b7bcc5, #f2f4f7, #7d8590); }
+  .theme-preview-chip-lavender-noir { background: linear-gradient(110deg, #171227, #b493ff, #2f2448); }
+  .theme-preview-chip-midnight { background: linear-gradient(110deg, #0c111c, #6dd3d6, #1c2433); }
 
   [data-theme="midnight"] {
     color: #e8edf5;

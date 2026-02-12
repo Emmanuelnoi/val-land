@@ -6,7 +6,7 @@ A modern Valentine-themed single-page React app with a public creator flow and D
 
 - **Public creator page** at `/create` to build personalized Valentines
 - **Share link** for recipients at `/v/:slug`
-- **Private results link** at `/v/:slug/results?key=...` (shown once)
+- **Private results link** at `/v/:slug/results#key=...` (shown once)
 - **Optional creator Discord notifications** per Valentine
 - **Theme packs** (Valentine, Birthday Neutral/Bold/Blush, Red/Orange/Yellow/Green/Blue/Purple, Mono Dark/Light, Midnight) for multiple occasions
 
@@ -56,7 +56,18 @@ Set these environment variables on Vercel:
 ```
 UPSTASH_REDIS_REST_URL=...
 UPSTASH_REDIS_REST_TOKEN=...
+APP_BASE_URL=https://your-domain.example
+ANTI_ABUSE_CHALLENGE_TOKEN=...
+HEALTHCHECK_TOKEN=...
+CREATOR_NOTIFY_ENCRYPTION_KEY=...
 ```
+
+### Additional Security Hardening
+
+- `APP_BASE_URL`: canonical origin used for share/results links (prevents forwarded-host poisoning).
+- `ANTI_ABUSE_CHALLENGE_TOKEN`: in production this must be set; `POST /api/create`, `POST /api/submit`, and `POST /api/valentine` require header `x-app-challenge`.
+- `HEALTHCHECK_TOKEN`: if set, `GET /api/health/kv` requires header `x-healthcheck-token`.
+- `CREATOR_NOTIFY_ENCRYPTION_KEY`: required to encrypt creator Discord webhook URLs before storing them in KV.
 
 
 ## How to Edit Default Gifts
@@ -86,10 +97,10 @@ It validates input, rate limits requests, and sends a Discord embed notification
 - `POST /api/create`
 - `GET /api/config?slug=...`
 - `POST /api/submit`
-- `GET /api/results?slug=...&key=...`
+- `POST /api/results` with JSON body `{ "slug": "...", "key": "..." }`
 - `GET /api/health/kv` (connectivity check)
 
 ### Security Notes
 
-- Creator webhooks are stored only server-side.
+- Creator webhooks are encrypted before storage and decrypted server-side only when dispatching notifications.
 - Admin tokens are hashed in storage (tokens are returned only once).

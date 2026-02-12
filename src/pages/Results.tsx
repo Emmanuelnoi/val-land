@@ -28,17 +28,9 @@ export default function Results({ slug, adminKey }: ResultsProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-    if (adminKey) {
-      setActiveKey(adminKey);
-      window.sessionStorage.setItem(`valentineResultsKey:${slug}`, adminKey);
-      return;
-    }
-    const stored = window.sessionStorage.getItem(`valentineResultsKey:${slug}`);
-    if (stored) {
-      setActiveKey(stored);
-    }
-  }, [adminKey, slug]);
+    if (!adminKey) return;
+    setActiveKey(adminKey);
+  }, [adminKey]);
 
   useEffect(() => {
     let isActive = true;
@@ -62,6 +54,7 @@ export default function Results({ slug, adminKey }: ResultsProps) {
         if (typeof window !== 'undefined' && adminKey) {
           const url = new URL(window.location.href);
           url.searchParams.delete('key');
+          url.hash = '';
           window.history.replaceState({}, '', `${url.pathname}${url.search}`);
         }
       }
