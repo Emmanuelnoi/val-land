@@ -147,9 +147,9 @@ function getThemeCopy(themeFamily: 'valentine' | 'birthday' | 'sage', toName: st
       };
     default:
       return {
-        collectionLabel: 'Valentine Collection',
-        headline: name ? `${name}, Will You Be My Valentine?` : 'Will You Be My Valentine?',
-        fallbackMessage: 'A small question with a soft landing.',
+        collectionLabel: 'Gift-land Collection',
+        headline: name ? `${name}, Want To Pick Your Gifts?` : 'Want To Pick Your Gifts?',
+        fallbackMessage: 'A thoughtful invite with a soft landing.',
         giftsTitle: 'Pick Three',
         giftsSubtitle: 'Three elegant treats, one effortless choice.',
         thanksTitle: 'You Chose Beautifully',
@@ -276,7 +276,7 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
   const handleShare = async () => {
     if (typeof window === 'undefined') return;
     const url = window.location.href;
-    const title = config.toName ? `${config.toName}'s Valentine` : 'Valentine';
+    const title = config.toName ? `${config.toName}'s Gift Page` : 'Gift-land';
     const text = config.toName
       ? `A little something for ${config.toName}.`
       : 'A little something for you.';
@@ -353,7 +353,7 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
                     className="btn-secondary inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold shadow-soft focus-ring transition-transform duration-200 hover:-translate-y-0.5 touch-manipulation"
                   >
                     <FontAwesomeIcon icon={faWandMagicSparkles} aria-hidden="true" />
-                    Create Your Valentine
+                    Create Your Gift Page
                   </Link>
                 ) : null}
               </div>

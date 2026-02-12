@@ -100,7 +100,7 @@ export default function Results({ slug, adminKey }: ResultsProps) {
                 to="/create"
                 className="mt-3 inline-flex text-sm font-semibold text-accent hover-text-accent-strong focus-ring touch-manipulation"
               >
-                Create a New Valentine
+                Create a New Gift Page
               </Link>
             </div>
           </div>

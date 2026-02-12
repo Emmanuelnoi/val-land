@@ -75,7 +75,7 @@ export async function createValentine(
     };
 
     if (!response.ok || !data.ok) {
-      return { ok: false, error: data.error ?? 'Failed to create Valentine' };
+      return { ok: false, error: data.error ?? 'Failed to create gift page' };
     }
 
     const origin =

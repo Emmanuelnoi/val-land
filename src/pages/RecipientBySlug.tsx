@@ -66,7 +66,7 @@ export default function RecipientBySlug({ slug }: RecipientBySlugProps) {
           <div className="flex items-start gap-3 text-sm text-accent-strong">
             <FontAwesomeIcon icon={faTriangleExclamation} className="mt-0.5" aria-hidden="true" />
             <div>
-              <p className="font-semibold">We couldn’t load this Valentine.</p>
+              <p className="font-semibold">We couldn’t load this gift page.</p>
               <p className="text-accent-muted">{error ?? 'Please check the link and try again.'}</p>
             </div>
           </div>

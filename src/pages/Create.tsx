@@ -132,7 +132,7 @@ export default function Create() {
         return 'Create a Gift Page';
       case 'valentine':
       default:
-        return 'Create Your Valentine';
+        return 'Create Your Gift Page';
     }
   }, [selectedTheme]);
   const createSubtitle = useMemo(() => {
@@ -194,7 +194,7 @@ export default function Create() {
     () => [
       {
         id: 'valentine' as const,
-        label: 'Valentine',
+        label: 'Romance',
         themes: THEMES.filter((theme) => ['valentine', 'sunset-gold', 'peach-cream'].includes(theme.key))
       },
       {
@@ -692,7 +692,7 @@ export default function Create() {
           <div className="flex flex-wrap items-center gap-3">
             <Button type="submit" variant="primary" size="lg" disabled={isSubmitting}>
               <FontAwesomeIcon icon={faWandMagicSparkles} aria-hidden="true" />
-              {isSubmitting ? 'Creating…' : 'Generate Share Link'}
+              {isSubmitting ? 'Creating…' : 'Generate Gift Page'}
             </Button>
             {copyMessage ? (
               <span className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-300" aria-live="polite">
@@ -768,7 +768,7 @@ export default function Create() {
             <Card className="bg-white/70">
               <div className="space-y-2 text-sm text-ink-400">
                 <p className="font-semibold text-ink-500">Share and results links</p>
-                <p>Generate your Valentine to reveal share + results links.</p>
+                <p>Generate your gift page to reveal share + results links.</p>
               </div>
             </Card>
           )}

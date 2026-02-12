@@ -40,7 +40,7 @@ export type ThemeDefinition = {
 export const THEMES: ThemeDefinition[] = [
   {
     key: 'valentine',
-    label: 'Valentine',
+    label: 'Romance',
     description: 'Romantic blush with soft glow.',
     preview: ['#f05d88', '#ff90b3', '#ffd4b2'],
     confetti: ['#FF90B3', '#F05D88', '#FFD4B2', '#FFE7F0', '#D94873', '#FFB3C7']
@@ -173,7 +173,7 @@ export const THEMES: ThemeDefinition[] = [
   }
 ];
 
-export const DEFAULT_THEME: ThemeKey = 'valentine';
+export const DEFAULT_THEME: ThemeKey = 'mono-light';
 
 export const THEME_KEYS = THEMES.map((theme) => theme.key);
 
@@ -195,7 +195,7 @@ export function normalizeThemeKey(value?: string): ThemeKey {
 export function getTheme(key?: string): ThemeDefinition {
   const normalized = normalizeThemeKey(key);
   const match = THEMES.find((theme) => theme.key === normalized);
-  return match ?? THEMES[0];
+  return match ?? THEMES.find((theme) => theme.key === DEFAULT_THEME) ?? THEMES[0];
 }
 
 export function getThemeFamily(key: ThemeKey | LegacyThemeKey) {
