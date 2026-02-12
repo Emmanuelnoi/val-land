@@ -1,6 +1,6 @@
 import PageShell from './components/PageShell';
 import { RouterProvider, useRouter } from './router';
-import HomeRecipient from './pages/HomeRecipient';
+import Home from './pages/Home';
 import Create from './pages/Create';
 import RecipientBySlug from './pages/RecipientBySlug';
 import Results from './pages/Results';
@@ -17,7 +17,7 @@ function AppRoutes() {
       return <Results slug={route.slug} adminKey={route.key} />;
     case 'home':
     default:
-      return <HomeRecipient />;
+      return <Home />;
   }
 }
 

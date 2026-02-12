@@ -17,7 +17,7 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { Link } from '../router';
 import { createValentine } from '../lib/api';
-import { DEFAULT_THEME, THEMES, getThemeFamily } from '../lib/themes';
+import { DEFAULT_THEME, THEMES, getThemeFamily, normalizeThemeKey } from '../lib/themes';
 import type { ThemeKey } from '../lib/themes';
 import type { Gift, ValentineCreatePayload, ValentineCreateResult } from '../lib/types';
 import { useTheme } from '../theme';
@@ -40,6 +40,50 @@ const MAX_TITLE = 60;
 const MAX_DESCRIPTION = 140;
 
 type ThemeGroupId = 'valentine' | 'birthday' | 'colors' | 'mono';
+const THEME_GROUP_IDS: ThemeGroupId[] = ['valentine', 'birthday', 'colors', 'mono'];
+
+function getExpandedGroupsFromQuery(): Record<ThemeGroupId, boolean> {
+  const defaults = {
+    valentine: true,
+    birthday: true,
+    colors: true,
+    mono: true
+  };
+  if (typeof window === 'undefined') return defaults;
+
+  const openRaw = new URLSearchParams(window.location.search).get('open');
+  if (!openRaw) return defaults;
+
+  const tokens = new Set(
+    openRaw
+      .split(',')
+      .map((part) => part.trim())
+      .filter(Boolean)
+  );
+
+  let hasAnyKnownToken = false;
+  const next: Record<ThemeGroupId, boolean> = {
+    valentine: false,
+    birthday: false,
+    colors: false,
+    mono: false
+  };
+
+  THEME_GROUP_IDS.forEach((id) => {
+    if (tokens.has(id)) {
+      hasAnyKnownToken = true;
+      next[id] = true;
+    }
+  });
+
+  return hasAnyKnownToken ? next : defaults;
+}
+
+function getInitialThemeFromQuery(): ThemeKey {
+  if (typeof window === 'undefined') return DEFAULT_THEME;
+  const themeRaw = new URLSearchParams(window.location.search).get('theme') ?? undefined;
+  return normalizeThemeKey(themeRaw);
+}
 
 function createGiftForm(): GiftForm {
   const formId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -75,13 +119,10 @@ export default function Create() {
   const [result, setResult] = useState<ValentineCreateResult | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<'share' | 'results' | null>(null);
-  const [selectedTheme, setSelectedTheme] = useState<ThemeKey>(DEFAULT_THEME);
-  const [expandedThemeGroups, setExpandedThemeGroups] = useState<Record<ThemeGroupId, boolean>>({
-    valentine: true,
-    birthday: true,
-    colors: true,
-    mono: true
-  });
+  const [selectedTheme, setSelectedTheme] = useState<ThemeKey>(getInitialThemeFromQuery);
+  const [expandedThemeGroups, setExpandedThemeGroups] = useState<Record<ThemeGroupId, boolean>>(
+    getExpandedGroupsFromQuery
+  );
   const { setTheme } = useTheme();
   const createHeadline = useMemo(() => {
     switch (getThemeFamily(selectedTheme)) {
@@ -111,6 +152,31 @@ export default function Create() {
   useEffect(() => {
     setTheme(selectedTheme);
   }, [selectedTheme, setTheme]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    if (selectedTheme === DEFAULT_THEME) {
+      params.delete('theme');
+    } else {
+      params.set('theme', selectedTheme);
+    }
+
+    const openGroups = THEME_GROUP_IDS.filter((id) => expandedThemeGroups[id]);
+    if (openGroups.length === THEME_GROUP_IDS.length) {
+      params.delete('open');
+    } else {
+      params.set('open', openGroups.join(','));
+    }
+
+    const search = params.toString();
+    const nextUrl = `${window.location.pathname}${search ? `?${search}` : ''}`;
+    const currentUrl = `${window.location.pathname}${window.location.search}`;
+    if (nextUrl !== currentUrl) {
+      window.history.replaceState({}, '', nextUrl);
+    }
+  }, [selectedTheme, expandedThemeGroups]);
+
   const hasUnsavedChanges = useMemo(() => {
     if (result) return false;
     if (selectedTheme !== DEFAULT_THEME) return true;

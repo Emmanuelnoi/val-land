@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Val-land">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f26a8d" />
+      <stop offset="100%" stop-color="#d94873" />
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="#fff4f8" />
+  <path
+    d="M32 52c-.8 0-1.6-.3-2.2-.9L13.4 34.7a12.2 12.2 0 1 1 17.2-17.2l1.4 1.4 1.4-1.4a12.2 12.2 0 1 1 17.2 17.2L34.2 51.1c-.6.6-1.4.9-2.2.9Z"
+    fill="url(#g)"
+  />
+</svg>

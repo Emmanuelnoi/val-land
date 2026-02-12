@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useReducer, useState } from 'react';
-import type { CSSProperties, KeyboardEvent } from 'react';
+import type { CSSProperties } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faArrowRight,
@@ -36,11 +36,13 @@ type RecipientFlowProps = {
 
 type AppState =
   | { view: 'ASK' }
+  | { view: 'DECLINED' }
   | { view: 'GIFTS'; selected: SelectedGift[] }
   | { view: 'THANKS'; selected: SelectedGift[]; submitError?: string };
 
 type Action =
   | { type: 'CONFIRM_YES' }
+  | { type: 'DECLINE' }
   | { type: 'SELECT_GIFT'; gift: SelectedGift }
   | { type: 'REMOVE_GIFT'; id: string }
   | { type: 'SUBMIT_RESULT'; ok: boolean; error?: string }
@@ -69,8 +71,11 @@ const REQUIRED_GIFTS = 3;
 function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
     case 'CONFIRM_YES':
-      if (state.view !== 'ASK') return state;
+      if (state.view !== 'ASK' && state.view !== 'DECLINED') return state;
       return { view: 'GIFTS', selected: [] };
+    case 'DECLINE':
+      if (state.view !== 'ASK') return state;
+      return { view: 'DECLINED' };
     case 'SELECT_GIFT':
       if (state.view !== 'GIFTS') return state;
       if (state.selected.some((gift) => gift.id === action.gift.id)) return state;
@@ -164,8 +169,6 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
   const [visibleGifts, setVisibleGifts] = useState<Gift[]>(config.gifts);
   const [leavingIds, setLeavingIds] = useState<Set<string>>(new Set());
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [noIsYes, setNoIsYes] = useState(false);
-  const [noWiggle, setNoWiggle] = useState(false);
   const [shareMessage, setShareMessage] = useState<string | null>(null);
   const [confettiBursts, setConfettiBursts] = useState<ConfettiBurst[]>([]);
 
@@ -173,8 +176,6 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
     setVisibleGifts(config.gifts);
     setLeavingIds(new Set());
     setIsSubmitting(false);
-    setNoIsYes(false);
-    setNoWiggle(false);
     dispatch({ type: 'RESET' });
   }, [config]);
 
@@ -183,8 +184,6 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
       setVisibleGifts(config.gifts);
       setLeavingIds(new Set());
       setIsSubmitting(false);
-      setNoIsYes(false);
-      setNoWiggle(false);
     }
   }, [state.view, config.gifts]);
 
@@ -219,20 +218,9 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
     dispatch({ type: 'CONFIRM_YES' });
   };
 
-  const handleNoActivate = () => {
-    setNoIsYes(true);
-    setNoWiggle(true);
-    window.setTimeout(() => setNoWiggle(false), 200);
+  const handleDecline = () => {
     incrementStat('noClicks');
-    triggerConfetti();
-    dispatch({ type: 'CONFIRM_YES' });
-  };
-
-  const handleNoKeyDown = (event: KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault();
-      handleNoActivate();
-    }
+    dispatch({ type: 'DECLINE' });
   };
 
   const handleSelectGift = (gift: Gift) => {
@@ -365,7 +353,7 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
                     className="btn-secondary inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold shadow-soft focus-ring transition-transform duration-200 hover:-translate-y-0.5 touch-manipulation"
                   >
                     <FontAwesomeIcon icon={faWandMagicSparkles} aria-hidden="true" />
-                    Create your Valentine
+                    Create Your Valentine
                   </Link>
                 ) : null}
               </div>
@@ -382,22 +370,43 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
               <div className="flex flex-wrap gap-4">
                 <Button variant="primary" size="lg" onClick={handleConfirmYes}>
                   <FontAwesomeIcon icon={faHeart} aria-hidden="true" />
-                  Yes
+                  Yes, Let&apos;s Go
                 </Button>
                 <Button
-                  variant={noIsYes ? 'primary' : 'secondary'}
+                  variant="secondary"
                   size="lg"
-                  className={noWiggle ? 'animate-wiggle' : ''}
-                  onMouseEnter={() => setNoIsYes(true)}
-                  onFocus={() => setNoIsYes(true)}
-                  onMouseLeave={() => setNoIsYes(false)}
-                  onBlur={() => setNoIsYes(false)}
-                  onClick={handleNoActivate}
-                  onKeyDown={handleNoKeyDown}
-                  aria-label={noIsYes ? 'Yes' : 'No'}
+                  onClick={handleDecline}
                 >
-                  <FontAwesomeIcon icon={noIsYes ? faHeart : faXmark} aria-hidden="true" />
-                  {noIsYes ? 'Yes' : 'No'}
+                  <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+                  No, Not Now
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {state.view === 'DECLINED' ? (
+        <div className="flex flex-1 flex-col justify-center gap-10">
+          <div className="valentine-panel mx-auto w-full max-w-3xl p-8 sm:p-12">
+            <div className="space-y-6">
+              <span className="valentine-chip">All Good</span>
+              <h1 className="text-balance text-3xl font-semibold leading-tight text-shadow-soft sm:text-5xl">
+                <span className="text-rose-gradient">
+                  {config.toName ? `${config.toName}, No Pressure.` : 'No Pressure.'}
+                </span>
+              </h1>
+              <p className="max-w-2xl text-base text-ink-300/90">
+                You can come back anytime. If you change your mind, your picks are one tap away.
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <Button variant="primary" size="lg" onClick={handleConfirmYes}>
+                  <FontAwesomeIcon icon={faHeart} aria-hidden="true" />
+                  Actually, Let&apos;s Pick Gifts
+                </Button>
+                <Button variant="secondary" size="lg" onClick={() => dispatch({ type: 'RESET' })}>
+                  <FontAwesomeIcon icon={faRotateLeft} aria-hidden="true" />
+                  Back To Question
                 </Button>
               </div>
             </div>
