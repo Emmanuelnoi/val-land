@@ -28,13 +28,46 @@ export type ResultsResult =
     }
   | { ok: false; error: string };
 
+type ChallengeApiResult = {
+  ok?: boolean;
+  challenge?: string | null;
+  expiresIn?: number;
+};
+
+let challengeCache: { value: string; expiresAt: number } | null = null;
+
+async function getChallengeHeader(): Promise<Record<string, string>> {
+  const now = Date.now();
+  if (challengeCache && challengeCache.expiresAt > now + 5000) {
+    return { 'x-app-challenge': challengeCache.value };
+  }
+
+  try {
+    const response = await fetch('/api/challenge');
+    const data = (await response.json().catch(() => ({}))) as ChallengeApiResult;
+    if (!response.ok || !data.ok || typeof data.challenge !== 'string' || data.challenge.length === 0) {
+      return {};
+    }
+
+    const expiresIn = typeof data.expiresIn === 'number' ? data.expiresIn : 300;
+    challengeCache = {
+      value: data.challenge,
+      expiresAt: now + Math.max(30, Math.min(expiresIn, 600)) * 1000
+    };
+    return { 'x-app-challenge': data.challenge };
+  } catch (error) {
+    return {};
+  }
+}
+
 export async function submitSelection(
   payload: SubmissionPayload
 ): Promise<SubmitResult> {
   try {
+    const challengeHeader = await getChallengeHeader();
     const response = await fetch('/api/valentine', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...challengeHeader },
       body: JSON.stringify(payload)
     });
 
@@ -60,9 +93,10 @@ export async function createValentine(
   payload: ValentineCreatePayload
 ): Promise<ApiResult<ValentineCreateResult>> {
   try {
+    const challengeHeader = await getChallengeHeader();
     const response = await fetch('/api/create', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...challengeHeader },
       body: JSON.stringify(payload)
     });
 
@@ -123,9 +157,10 @@ export async function submitBySlug(
   pickedGifts: SelectedGift[]
 ): Promise<SubmitResult> {
   try {
+    const challengeHeader = await getChallengeHeader();
     const response = await fetch('/api/submit', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...challengeHeader },
       body: JSON.stringify({ slug, pickedGifts })
     });
 

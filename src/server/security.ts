@@ -281,6 +281,62 @@ export function hashToken(token: string) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+function hashUserAgent(header: string | string[] | undefined): string {
+  const raw = Array.isArray(header) ? header[0] : header;
+  const normalized = typeof raw === 'string' ? raw.slice(0, 512) : '';
+  return hashToken(normalized);
+}
+
+function signChallengePayload(payloadRaw: string, secret: string): string {
+  return crypto.createHmac('sha256', secret).update(payloadRaw).digest('base64url');
+}
+
+type SignedChallengePayload = {
+  ip: string;
+  ua: string;
+  exp: number;
+};
+
+export function createSignedChallenge(req: VercelRequest, ttlSeconds = 300): string | undefined {
+  const secret = process.env.ANTI_ABUSE_CHALLENGE_TOKEN?.trim();
+  if (!secret) return undefined;
+
+  const payload: SignedChallengePayload = {
+    ip: getClientIp(req),
+    ua: hashUserAgent(req.headers['user-agent']),
+    exp: Date.now() + ttlSeconds * 1000
+  };
+
+  const payloadRaw = Buffer.from(JSON.stringify(payload), 'utf8').toString('base64url');
+  const signature = signChallengePayload(payloadRaw, secret);
+  return `v1.${payloadRaw}.${signature}`;
+}
+
+function verifySignedChallenge(req: VercelRequest, provided: string, secret: string): boolean {
+  const parts = provided.split('.');
+  if (parts.length !== 3 || parts[0] !== 'v1') return false;
+
+  const payloadRaw = parts[1];
+  const providedSig = parts[2];
+  const expectedSig = signChallengePayload(payloadRaw, secret);
+  if (!timingSafeEqualHex(hashToken(providedSig), hashToken(expectedSig))) return false;
+
+  let payload: SignedChallengePayload;
+  try {
+    payload = JSON.parse(Buffer.from(payloadRaw, 'base64url').toString('utf8')) as SignedChallengePayload;
+  } catch (error) {
+    return false;
+  }
+
+  if (!payload || typeof payload.exp !== 'number' || typeof payload.ip !== 'string' || typeof payload.ua !== 'string') {
+    return false;
+  }
+  if (Date.now() > payload.exp) return false;
+  if (payload.ip !== getClientIp(req)) return false;
+  if (payload.ua !== hashUserAgent(req.headers['user-agent'])) return false;
+  return true;
+}
+
 function getEncryptionKey(keyMaterial?: string): Buffer | null {
   const value = keyMaterial?.trim() ?? process.env.CREATOR_NOTIFY_ENCRYPTION_KEY?.trim() ?? '';
   if (!value) return null;
@@ -332,7 +388,8 @@ export function hasValidChallenge(req: VercelRequest): boolean {
   if (typeof provided !== 'string' || provided.length === 0) return false;
   const providedHash = hashToken(provided);
   const expectedHash = hashToken(expected);
-  return timingSafeEqualHex(providedHash, expectedHash);
+  if (timingSafeEqualHex(providedHash, expectedHash)) return true;
+  return verifySignedChallenge(req, provided, expected);
 }
 
 const SLUG_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';

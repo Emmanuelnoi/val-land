@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { encryptSecret, hashToken } from '../../src/server/security';
+import { createSignedChallenge, encryptSecret, hashToken } from '../../src/server/security';
 
 type MockResponse = VercelResponse & {
   statusCode: number;
@@ -294,6 +294,42 @@ describe('creator flow api', () => {
 
     await handler(req, res);
     expect(res.statusCode).toBe(200);
+  });
+
+  it('accepts signed challenge header when configured', async () => {
+    process.env.ANTI_ABUSE_CHALLENGE_TOKEN = 'challenge-secret';
+    const handler = (await import('../../api/create')).default;
+    const req = {
+      method: 'POST',
+      headers: { 'user-agent': 'vitest' },
+      body: {
+        toName: 'Bri',
+        message: 'Be my valentine',
+        gifts: baseGifts
+      }
+    } as unknown as VercelRequest;
+    const signedChallenge = createSignedChallenge(req, 300);
+    req.headers['x-app-challenge'] = signedChallenge as string;
+    const res = createMockRes();
+
+    await handler(req, res);
+    expect(res.statusCode).toBe(200);
+  });
+
+  it('returns a signed challenge token when challenge is configured', async () => {
+    process.env.ANTI_ABUSE_CHALLENGE_TOKEN = 'challenge-secret';
+    const handler = (await import('../../api/challenge')).default;
+    const req = {
+      method: 'GET',
+      headers: { 'user-agent': 'vitest' }
+    } as unknown as VercelRequest;
+    const res = createMockRes();
+
+    await handler(req, res);
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['Cache-Control']).toBe('no-store, private, max-age=0');
+    expect(res.jsonBody).toMatchObject({ ok: true, expiresIn: 300 });
+    expect((res.jsonBody as { challenge?: string }).challenge).toMatch(/^v1\./);
   });
 
   it('does not trust forwarded host in production without APP_BASE_URL', async () => {
