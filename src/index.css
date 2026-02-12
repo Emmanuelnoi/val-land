@@ -655,6 +655,34 @@
     );
   }
 
+  [data-theme="midnight"] .bg-white\/90 {
+    background: rgba(16, 20, 30, 0.9) !important;
+  }
+
+  [data-theme="midnight"] .bg-white\/85 {
+    background: rgba(16, 20, 30, 0.86) !important;
+  }
+
+  [data-theme="midnight"] .bg-white\/80 {
+    background: rgba(16, 20, 30, 0.82) !important;
+  }
+
+  [data-theme="midnight"] .bg-white\/70 {
+    background: rgba(16, 20, 30, 0.76) !important;
+  }
+
+  [data-theme="midnight"] .border-white\/80 {
+    border-color: rgba(130, 150, 180, 0.5) !important;
+  }
+
+  [data-theme="midnight"] .border-white\/70 {
+    border-color: rgba(120, 140, 170, 0.42) !important;
+  }
+
+  [data-theme="midnight"] .border-white\/60 {
+    border-color: rgba(110, 130, 160, 0.35) !important;
+  }
+
   [data-theme="midnight"] .btn-secondary {
     background: rgba(20, 24, 34, 0.9) !important;
     border-color: rgba(120, 140, 170, 0.5) !important;
