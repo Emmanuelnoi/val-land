@@ -65,9 +65,9 @@ CREATOR_NOTIFY_ENCRYPTION_KEY=...
 ### Additional Security Hardening
 
 - `APP_BASE_URL`: canonical origin used for share/results links (prevents forwarded-host poisoning).
-- `ANTI_ABUSE_CHALLENGE_TOKEN`: in production this must be set; `POST /api/create`, `POST /api/submit`, and `POST /api/valentine` require header `x-app-challenge`.
+- `ANTI_ABUSE_CHALLENGE_TOKEN`: recommended primary signing secret for anti-abuse challenge tokens used by `POST /api/create`, `POST /api/submit`, and `POST /api/valentine`.
 - `HEALTHCHECK_TOKEN`: if set, `GET /api/health/kv` requires header `x-healthcheck-token`.
-- `CREATOR_NOTIFY_ENCRYPTION_KEY`: required to encrypt creator Discord webhook URLs before storing them in KV.
+- `CREATOR_NOTIFY_ENCRYPTION_KEY`: required to encrypt creator Discord webhook URLs before storing them in KV. If `ANTI_ABUSE_CHALLENGE_TOKEN` is unset, this key is used as fallback challenge signing secret.
 - Browser clients fetch short-lived signed challenges from `GET /api/challenge` automatically before protected POSTs.
 
 

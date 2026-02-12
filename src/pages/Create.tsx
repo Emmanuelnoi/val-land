@@ -124,6 +124,16 @@ function getThemePreviewClass(themeKey: ThemeKey) {
   return `theme-preview-chip theme-preview-chip-${themeKey}`;
 }
 
+function toCreateErrorMessage(error: string) {
+  if (error === 'Challenge failed') {
+    return 'Security check failed. Refresh and try again. If it keeps happening, ask the site owner to configure anti-abuse challenge keys.';
+  }
+  if (error === 'Server not configured') {
+    return 'This page is temporarily unavailable due to server configuration. Please try again later.';
+  }
+  return error;
+}
+
 export default function Create() {
   const [toName, setToName] = useState('');
   const [message, setMessage] = useState('');
@@ -341,7 +351,7 @@ export default function Create() {
     if (response.ok) {
       setResult(response.result);
     } else {
-      setErrors((prev) => ({ ...prev, gifts: response.error }));
+      setErrors((prev) => ({ ...prev, gifts: toCreateErrorMessage(response.error) }));
     }
     setIsSubmitting(false);
   };

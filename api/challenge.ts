@@ -17,16 +17,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   res.setHeader('Cache-Control', 'no-store, private, max-age=0');
 
-  const challengeSecret = process.env.ANTI_ABUSE_CHALLENGE_TOKEN?.trim();
-  if (!challengeSecret) {
-    if (process.env.NODE_ENV === 'production') {
-      res.status(500).json({ ok: false, error: 'Server not configured' });
-      return;
-    }
-    res.status(200).json({ ok: true, challenge: null, expiresIn: 0 });
-    return;
-  }
-
   const rate = await challengeLimiter(getClientIp(req));
   if (rate.limited) {
     res.setHeader('Retry-After', rate.retryAfter.toString());
@@ -36,6 +26,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const challenge = createSignedChallenge(req, 5 * 60);
   if (!challenge) {
+    if (process.env.NODE_ENV !== 'production') {
+      res.status(200).json({ ok: true, challenge: null, expiresIn: 0 });
+      return;
+    }
     res.status(500).json({ ok: false, error: 'Server not configured' });
     return;
   }

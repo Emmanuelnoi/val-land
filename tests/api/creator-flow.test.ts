@@ -173,7 +173,11 @@ describe('creator flow api', () => {
     const handler = (await import('../../api/create')).default;
     const req = {
       method: 'POST',
-      headers: { 'x-forwarded-proto': 'https', host: 'val.local' },
+      headers: {
+        'x-forwarded-proto': 'https',
+        host: 'val.local',
+        'x-app-challenge': 'local-dev-encryption-key'
+      },
       body: {
         toName: 'Bri',
         message: 'Be my valentine',
@@ -332,6 +336,20 @@ describe('creator flow api', () => {
     expect((res.jsonBody as { challenge?: string }).challenge).toMatch(/^v1\./);
   });
 
+  it('returns a signed challenge token when anti-abuse token is unset but encryption key is set', async () => {
+    process.env.CREATOR_NOTIFY_ENCRYPTION_KEY = 'local-dev-encryption-key';
+    const handler = (await import('../../api/challenge')).default;
+    const req = {
+      method: 'GET',
+      headers: { 'user-agent': 'vitest' }
+    } as unknown as VercelRequest;
+    const res = createMockRes();
+
+    await handler(req, res);
+    expect(res.statusCode).toBe(200);
+    expect((res.jsonBody as { challenge?: string }).challenge).toMatch(/^v1\./);
+  });
+
   it('does not trust forwarded host in production without APP_BASE_URL', async () => {
     const prevNodeEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = 'production';
@@ -459,7 +477,10 @@ describe('creator flow api', () => {
     const handler = (await import('../../api/submit')).default;
     const req = {
       method: 'POST',
-      headers: { 'x-forwarded-for': '1.2.3.4' },
+      headers: {
+        'x-forwarded-for': '1.2.3.4',
+        'x-app-challenge': 'local-dev-encryption-key'
+      },
       body: {
         slug: 'abc123',
         pickedGifts: [

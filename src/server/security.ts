@@ -281,6 +281,14 @@ export function hashToken(token: string) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
+function getChallengeSecret(): string | undefined {
+  const primary = process.env.ANTI_ABUSE_CHALLENGE_TOKEN?.trim();
+  if (primary) return primary;
+  const fallback = process.env.CREATOR_NOTIFY_ENCRYPTION_KEY?.trim();
+  if (fallback) return fallback;
+  return undefined;
+}
+
 function hashUserAgent(header: string | string[] | undefined): string {
   const raw = Array.isArray(header) ? header[0] : header;
   const normalized = typeof raw === 'string' ? raw.slice(0, 512) : '';
@@ -298,7 +306,7 @@ type SignedChallengePayload = {
 };
 
 export function createSignedChallenge(req: VercelRequest, ttlSeconds = 300): string | undefined {
-  const secret = process.env.ANTI_ABUSE_CHALLENGE_TOKEN?.trim();
+  const secret = getChallengeSecret();
   if (!secret) return undefined;
 
   const payload: SignedChallengePayload = {
@@ -381,7 +389,7 @@ export function timingSafeEqualHex(a: string, b: string) {
 }
 
 export function hasValidChallenge(req: VercelRequest): boolean {
-  const expected = process.env.ANTI_ABUSE_CHALLENGE_TOKEN?.trim();
+  const expected = getChallengeSecret();
   if (!expected) return process.env.NODE_ENV !== 'production';
   const header = req.headers['x-app-challenge'];
   const provided = Array.isArray(header) ? header[0] : header;
