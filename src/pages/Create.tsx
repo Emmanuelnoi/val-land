@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faArrowRight,
+  faChevronDown,
   faCirclePlus,
   faCopy,
   faGift,
@@ -37,6 +38,8 @@ const MAX_NAME = 60;
 const MAX_MESSAGE = 180;
 const MAX_TITLE = 60;
 const MAX_DESCRIPTION = 140;
+
+type ThemeGroupId = 'valentine' | 'birthday' | 'colors' | 'mono';
 
 function createGiftForm(): GiftForm {
   const formId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -73,6 +76,12 @@ export default function Create() {
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [copiedKey, setCopiedKey] = useState<'share' | 'results' | null>(null);
   const [selectedTheme, setSelectedTheme] = useState<ThemeKey>(DEFAULT_THEME);
+  const [expandedThemeGroups, setExpandedThemeGroups] = useState<Record<ThemeGroupId, boolean>>({
+    valentine: true,
+    birthday: true,
+    colors: true,
+    mono: true
+  });
   const { setTheme } = useTheme();
   const createHeadline = useMemo(() => {
     switch (getThemeFamily(selectedTheme)) {
@@ -117,21 +126,39 @@ export default function Create() {
 
   const themeGroups = useMemo(
     () => [
-      { label: 'Valentine', themes: THEMES.filter((theme) => theme.key === 'valentine') },
-      { label: 'Birthday', themes: THEMES.filter((theme) => theme.key.startsWith('birthday')) },
       {
-        label: 'Color Wheel',
+        id: 'valentine' as const,
+        label: 'Valentine',
+        themes: THEMES.filter((theme) => ['valentine', 'sunset-gold', 'peach-cream'].includes(theme.key))
+      },
+      {
+        id: 'birthday' as const,
+        label: 'Birthday',
         themes: THEMES.filter((theme) =>
-          ['red', 'orange', 'yellow', 'green', 'blue', 'purple'].includes(theme.key)
+          ['birthday-neutral', 'birthday-men', 'birthday-women', 'birthday-neon'].includes(theme.key)
         )
       },
       {
+        id: 'colors' as const,
+        label: 'Colors',
+        themes: THEMES.filter((theme) =>
+          ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'ocean-mist', 'forest-ember'].includes(theme.key)
+        )
+      },
+      {
+        id: 'mono' as const,
         label: 'Mono',
-        themes: THEMES.filter((theme) => theme.key.startsWith('mono') || theme.key === 'midnight')
+        themes: THEMES.filter((theme) =>
+          ['mono-dark', 'mono-light', 'midnight', 'lavender-noir'].includes(theme.key)
+        )
       }
     ],
     []
   );
+
+  const toggleThemeGroup = (groupId: ThemeGroupId) => {
+    setExpandedThemeGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
 
   useEffect(() => {
     if (!hasUnsavedChanges || typeof window === 'undefined') return undefined;
@@ -303,53 +330,77 @@ export default function Create() {
                 <FontAwesomeIcon icon={faWandMagicSparkles} aria-hidden="true" />
                 Theme
               </div>
-              <div role="radiogroup" className="space-y-4">
+              <div className="space-y-4">
                 {themeGroups.map((group) => (
                   <div key={group.label} className="space-y-3">
-                    <div className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-300">
-                      {group.label}
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {group.themes.map((theme) => {
-                        const isActive = theme.key === selectedTheme;
-                        return (
-                          <button
-                            key={theme.key}
-                            type="button"
-                            role="radio"
-                            aria-checked={isActive}
-                            onClick={() => setSelectedTheme(theme.key)}
-                            className={[
-                              'rounded-2xl border px-4 py-3 text-left transition-shadow focus-ring',
-                              isActive
-                                ? 'border-accent-strong bg-accent-soft shadow-soft'
-                                : 'border-white/70 bg-white/70 hover:shadow-soft'
-                            ]
-                              .filter(Boolean)
-                              .join(' ')}
-                          >
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm font-semibold text-ink-500">{theme.label}</span>
-                              {isActive ? (
-                                <span className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
-                                  Active
-                                </span>
-                              ) : null}
-                            </div>
-                            <p className="mt-1 text-xs text-ink-300">{theme.description}</p>
-                            <div className="mt-3 flex items-center gap-2">
-                              {theme.preview.map((color) => (
-                                <span
-                                  key={`${theme.key}-${color}`}
-                                  className="h-3 w-3 rounded-full border border-white/80"
-                                  style={{ backgroundColor: color }}
-                                />
-                              ))}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    <button
+                      type="button"
+                      className="flex w-full items-center justify-between rounded-2xl border border-white/70 bg-white/70 px-3 py-2 text-left text-xs font-semibold uppercase tracking-[0.2em] text-ink-300 transition-colors hover:bg-white/80 focus-ring"
+                      aria-expanded={expandedThemeGroups[group.id]}
+                      aria-controls={`theme-group-${group.id}`}
+                      onClick={() => toggleThemeGroup(group.id)}
+                    >
+                      <span>{group.label}</span>
+                      <span className="flex items-center gap-2 text-[11px] tracking-[0.1em]">
+                        <span>{group.themes.length} options</span>
+                        <FontAwesomeIcon
+                          icon={faChevronDown}
+                          aria-hidden="true"
+                          className={[
+                            'transition-transform duration-200',
+                            expandedThemeGroups[group.id] ? 'rotate-180' : ''
+                          ].join(' ')}
+                        />
+                      </span>
+                    </button>
+                    {expandedThemeGroups[group.id] ? (
+                      <div
+                        id={`theme-group-${group.id}`}
+                        role="radiogroup"
+                        aria-label={`${group.label} themes`}
+                        className="grid gap-3 sm:grid-cols-2"
+                      >
+                        {group.themes.map((theme) => {
+                          const isActive = theme.key === selectedTheme;
+                          return (
+                            <button
+                              key={theme.key}
+                              type="button"
+                              role="radio"
+                              aria-checked={isActive}
+                              onClick={() => setSelectedTheme(theme.key)}
+                              className={[
+                                'rounded-2xl border px-4 py-3 text-left transition-shadow focus-ring',
+                                isActive
+                                  ? 'border-accent-strong bg-accent-soft shadow-soft'
+                                  : 'border-white/70 bg-white/70 hover:shadow-soft'
+                              ]
+                                .filter(Boolean)
+                                .join(' ')}
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="text-sm font-semibold text-ink-500">{theme.label}</span>
+                                {isActive ? (
+                                  <span className="text-xs font-semibold uppercase tracking-[0.16em] text-accent">
+                                    Active
+                                  </span>
+                                ) : null}
+                              </div>
+                              <p className="mt-1 text-xs text-ink-300">{theme.description}</p>
+                              <div className="mt-3 flex items-center gap-2">
+                                {theme.preview.map((color) => (
+                                  <span
+                                    key={`${theme.key}-${color}`}
+                                    className="h-3 w-3 rounded-full border border-white/80"
+                                    style={{ backgroundColor: color }}
+                                  />
+                                ))}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    ) : null}
                   </div>
                 ))}
               </div>

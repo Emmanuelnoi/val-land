@@ -1,16 +1,22 @@
 export type ThemeKey =
   | 'valentine'
+  | 'sunset-gold'
+  | 'peach-cream'
   | 'birthday-neutral'
   | 'birthday-men'
   | 'birthday-women'
+  | 'birthday-neon'
   | 'red'
   | 'orange'
   | 'yellow'
   | 'green'
   | 'blue'
   | 'purple'
+  | 'ocean-mist'
+  | 'forest-ember'
   | 'mono-dark'
   | 'mono-light'
+  | 'lavender-noir'
   | 'midnight';
 
 type LegacyThemeKey =
@@ -40,6 +46,20 @@ export const THEMES: ThemeDefinition[] = [
     confetti: ['#FF90B3', '#F05D88', '#FFD4B2', '#FFE7F0', '#D94873', '#FFB3C7']
   },
   {
+    key: 'sunset-gold',
+    label: 'Sunset Gold',
+    description: 'Amber romance with plum dusk.',
+    preview: ['#c95a3c', '#f8c777', '#5b2a3c'],
+    confetti: ['#C95A3C', '#F8C777', '#5B2A3C', '#FFD9A1', '#E07E5E', '#8B4056']
+  },
+  {
+    key: 'peach-cream',
+    label: 'Peach Cream',
+    description: 'Soft peach light with cocoa contrast.',
+    preview: ['#f7b38a', '#fff2dd', '#a66a4d'],
+    confetti: ['#F7B38A', '#FFF2DD', '#A66A4D', '#FFD8BF', '#C98560', '#F5E6CC']
+  },
+  {
     key: 'birthday-neutral',
     label: 'Birthday Neutral',
     description: 'Warm coral with golden celebration.',
@@ -59,6 +79,13 @@ export const THEMES: ThemeDefinition[] = [
     description: 'Soft berry with champagne glow.',
     preview: ['#f26a8d', '#ffd1dc', '#c85a84'],
     confetti: ['#F26A8D', '#FFD1DC', '#C85A84', '#FFE5EC', '#FF9EB5', '#E56B8C']
+  },
+  {
+    key: 'birthday-neon',
+    label: 'Neon Pop',
+    description: 'Electric confetti with midnight party lights.',
+    preview: ['#1b2a69', '#ff4fb8', '#28d7ff'],
+    confetti: ['#1B2A69', '#FF4FB8', '#28D7FF', '#FFE45E', '#8A7CFF', '#5AF7D4']
   },
   {
     key: 'red',
@@ -103,6 +130,20 @@ export const THEMES: ThemeDefinition[] = [
     confetti: ['#6C3BB8', '#C5A6FF', '#E6D8FF', '#3B1A6F', '#9B6EEB', '#4E2A8B']
   },
   {
+    key: 'ocean-mist',
+    label: 'Ocean Mist',
+    description: 'Seafoam drift with slate calm.',
+    preview: ['#2c7d8f', '#9ddde0', '#204956'],
+    confetti: ['#2C7D8F', '#9DDDE0', '#204956', '#CAF1F2', '#64AFC0', '#2E6675']
+  },
+  {
+    key: 'forest-ember',
+    label: 'Forest Ember',
+    description: 'Pine depth with copper glow.',
+    preview: ['#2f5f47', '#d6a76a', '#5b2f24'],
+    confetti: ['#2F5F47', '#D6A76A', '#5B2F24', '#E9D3B5', '#4D8A67', '#A75A35']
+  },
+  {
     key: 'mono-dark',
     label: 'Mono Dark',
     description: 'Charcoal polish with candlelight.',
@@ -115,6 +156,13 @@ export const THEMES: ThemeDefinition[] = [
     description: 'Pearl grey with quiet glow.',
     preview: ['#b7bcc5', '#f2f4f7', '#7d8590'],
     confetti: ['#B7BCC5', '#F2F4F7', '#E2E5EA', '#7D8590', '#9EA5B0', '#D6DAE1']
+  },
+  {
+    key: 'lavender-noir',
+    label: 'Lavender Noir',
+    description: 'Smoked violet night with silver pulse.',
+    preview: ['#171227', '#b493ff', '#2f2448'],
+    confetti: ['#B493FF', '#D4C3FF', '#8B6EDB', '#3B2D63', '#F2ECFF', '#4A3A77']
   },
   {
     key: 'midnight',
@@ -160,7 +208,10 @@ export function getThemeFamily(key: ThemeKey | LegacyThemeKey) {
     normalized === 'blue' ||
     normalized === 'green' ||
     normalized === 'purple' ||
+    normalized === 'ocean-mist' ||
+    normalized === 'forest-ember' ||
     normalized.startsWith('mono') ||
+    normalized === 'lavender-noir' ||
     normalized === 'midnight'
   )
     return 'sage';
