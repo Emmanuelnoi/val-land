@@ -8,7 +8,7 @@ A modern Valentine-themed single-page React app with a public creator flow and D
 - **Share link** for recipients at `/v/:slug`
 - **Private results link** at `/v/:slug/results?key=...` (shown once)
 - **Optional creator Discord notifications** per Valentine
-- **Theme packs** (Valentine, Birthday Neutral/Bold/Blush, Red/Yellow/Blue/Green, Mono Dark/Light, Midnight) for multiple occasions
+- **Theme packs** (Valentine, Birthday Neutral/Bold/Blush, Red/Orange/Yellow/Green/Blue/Purple, Mono Dark/Light, Midnight) for multiple occasions
 
 ## Install & Run
 

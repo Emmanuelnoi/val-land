@@ -190,6 +190,39 @@
     --bg-sparkles-g3: rgba(255, 247, 244, 0.98);
   }
 
+  [data-theme="orange"] {
+    --accent-1: #e26a1c;
+    --accent-2: #ffc48a;
+    --accent-3: #8a3a0f;
+    --accent-text: #c35316;
+    --accent-text-strong: #7a2f0c;
+    --accent-muted: #e2a06a;
+    --accent-soft: #fff3e7;
+    --accent-soft-strong: #ffe0c6;
+    --accent-soft-muted: rgba(255, 243, 231, 0.6);
+    --accent-soft-faint: rgba(255, 243, 231, 0.5);
+    --accent-border: #ffd4ac;
+    --accent-border-strong: #ffc08c;
+    --accent-border-muted: rgba(255, 212, 172, 0.8);
+    --accent-icon: #e26a1c;
+    --focus-ring: #ffc48a;
+    --chip-bg: rgba(255, 255, 255, 0.86);
+    --chip-border: rgba(235, 205, 180, 0.65);
+    --chip-text: #8a3a0f;
+    --card-border-1: rgba(235, 190, 150, 0.55);
+    --card-border-2: rgba(255, 228, 200, 0.6);
+    --bg-romance-r1: rgba(255, 210, 180, 0.35);
+    --bg-romance-r2: rgba(255, 232, 210, 0.3);
+    --bg-romance-g1: rgba(255, 251, 246, 0.98);
+    --bg-romance-g2: rgba(255, 242, 231, 0.95);
+    --bg-romance-g3: rgba(255, 248, 238, 0.98);
+    --bg-sparkles-r1: rgba(255, 216, 190, 0.3);
+    --bg-sparkles-r2: rgba(255, 236, 210, 0.26);
+    --bg-sparkles-g1: rgba(255, 252, 246, 0.98);
+    --bg-sparkles-g2: rgba(255, 244, 234, 0.96);
+    --bg-sparkles-g3: rgba(255, 249, 240, 0.98);
+  }
+
   [data-theme="yellow"] {
     --accent-1: #d9931a;
     --accent-2: #ffe3a3;
@@ -287,6 +320,39 @@
     --bg-sparkles-g1: rgba(248, 252, 250, 0.98);
     --bg-sparkles-g2: rgba(237, 246, 241, 0.96);
     --bg-sparkles-g3: rgba(244, 250, 247, 0.98);
+  }
+
+  [data-theme="purple"] {
+    --accent-1: #6c3bb8;
+    --accent-2: #c5a6ff;
+    --accent-3: #3b1a6f;
+    --accent-text: #6c3bb8;
+    --accent-text-strong: #3b1a6f;
+    --accent-muted: #9b6eeb;
+    --accent-soft: #f4efff;
+    --accent-soft-strong: #e6dbff;
+    --accent-soft-muted: rgba(244, 239, 255, 0.6);
+    --accent-soft-faint: rgba(244, 239, 255, 0.5);
+    --accent-border: #d8c8ff;
+    --accent-border-strong: #c5adff;
+    --accent-border-muted: rgba(216, 200, 255, 0.8);
+    --accent-icon: #6c3bb8;
+    --focus-ring: #c5a6ff;
+    --chip-bg: rgba(255, 255, 255, 0.86);
+    --chip-border: rgba(210, 195, 235, 0.65);
+    --chip-text: #6c3bb8;
+    --card-border-1: rgba(195, 175, 230, 0.55);
+    --card-border-2: rgba(232, 220, 255, 0.6);
+    --bg-romance-r1: rgba(214, 200, 242, 0.35);
+    --bg-romance-r2: rgba(232, 220, 255, 0.3);
+    --bg-romance-g1: rgba(251, 248, 255, 0.98);
+    --bg-romance-g2: rgba(242, 235, 255, 0.95);
+    --bg-romance-g3: rgba(248, 243, 255, 0.98);
+    --bg-sparkles-r1: rgba(220, 206, 245, 0.3);
+    --bg-sparkles-r2: rgba(238, 226, 255, 0.26);
+    --bg-sparkles-g1: rgba(251, 248, 255, 0.98);
+    --bg-sparkles-g2: rgba(244, 238, 255, 0.96);
+    --bg-sparkles-g3: rgba(249, 245, 255, 0.98);
   }
 
   [data-theme="mono-dark"] {
@@ -570,14 +636,14 @@
   }
 
   [data-theme="midnight"] .app-surface {
-    background: rgba(14, 18, 26, 0.92);
-    border-color: rgba(120, 140, 170, 0.35);
+    background: rgba(14, 18, 26, 0.92) !important;
+    border-color: rgba(120, 140, 170, 0.35) !important;
     box-shadow: 0 20px 40px -28px rgba(3, 6, 12, 0.8);
   }
 
   [data-theme="midnight"] .valentine-card {
-    background: rgba(12, 16, 24, 0.88);
-    border-color: rgba(120, 140, 170, 0.35);
+    background: rgba(12, 16, 24, 0.88) !important;
+    border-color: rgba(120, 140, 170, 0.35) !important;
     box-shadow: 0 24px 50px -30px rgba(3, 6, 12, 0.85);
   }
 
@@ -590,8 +656,8 @@
   }
 
   [data-theme="midnight"] .btn-secondary {
-    background: rgba(20, 24, 34, 0.9);
-    border-color: rgba(120, 140, 170, 0.5);
+    background: rgba(20, 24, 34, 0.9) !important;
+    border-color: rgba(120, 140, 170, 0.5) !important;
     color: #e8edf5;
   }
 
@@ -604,13 +670,13 @@
   }
 
   [data-theme="midnight"] .input-shell {
-    background: rgba(18, 22, 32, 0.9);
-    border-color: rgba(120, 140, 170, 0.35);
+    background: rgba(18, 22, 32, 0.9) !important;
+    border-color: rgba(120, 140, 170, 0.35) !important;
   }
 
   [data-theme="midnight"] .input-field {
-    background: rgba(18, 22, 32, 0.9);
-    border-color: rgba(120, 140, 170, 0.35);
+    background: rgba(24, 30, 44, 0.95) !important;
+    border-color: rgba(140, 165, 200, 0.45) !important;
     color: #eef2f8;
   }
 

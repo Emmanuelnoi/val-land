@@ -4,9 +4,11 @@ export type ThemeKey =
   | 'birthday-men'
   | 'birthday-women'
   | 'red'
+  | 'orange'
   | 'yellow'
-  | 'blue'
   | 'green'
+  | 'blue'
+  | 'purple'
   | 'mono-dark'
   | 'mono-light'
   | 'midnight';
@@ -66,11 +68,25 @@ export const THEMES: ThemeDefinition[] = [
     confetti: ['#8F1D2C', '#D75C44', '#F2B4A2', '#B43B2A', '#F08A74', '#4F0E1D']
   },
   {
+    key: 'orange',
+    label: 'Orange',
+    description: 'Vibrant tangerine with bronze warmth.',
+    preview: ['#e26a1c', '#ffc48a', '#8a3a0f'],
+    confetti: ['#E26A1C', '#FFC48A', '#FFE3C2', '#B54B12', '#F39A54', '#8A3A0F']
+  },
+  {
     key: 'yellow',
     label: 'Yellow',
     description: 'Saffron glow with soft citrus.',
     preview: ['#d9931a', '#ffe3a3', '#9a5d12'],
     confetti: ['#D9931A', '#FFE3A3', '#FFF2CC', '#B97512', '#F4C65C', '#9A5D12']
+  },
+  {
+    key: 'green',
+    label: 'Green',
+    description: 'Emerald lift with fresh mint.',
+    preview: ['#2f8f6b', '#a7e2c3', '#1f5b46'],
+    confetti: ['#2F8F6B', '#A7E2C3', '#E3F6ED', '#1F5B46', '#63B391', '#2E7D64']
   },
   {
     key: 'blue',
@@ -80,11 +96,11 @@ export const THEMES: ThemeDefinition[] = [
     confetti: ['#2F6FB5', '#9BD3FF', '#DCEBFF', '#1B3458', '#5A93D9', '#3D78C2']
   },
   {
-    key: 'green',
-    label: 'Green',
-    description: 'Emerald lift with fresh mint.',
-    preview: ['#2f8f6b', '#a7e2c3', '#1f5b46'],
-    confetti: ['#2F8F6B', '#A7E2C3', '#E3F6ED', '#1F5B46', '#63B391', '#2E7D64']
+    key: 'purple',
+    label: 'Purple',
+    description: 'Velvet plum with lilac glow.',
+    preview: ['#6c3bb8', '#c5a6ff', '#3b1a6f'],
+    confetti: ['#6C3BB8', '#C5A6FF', '#E6D8FF', '#3B1A6F', '#9B6EEB', '#4E2A8B']
   },
   {
     key: 'mono-dark',
@@ -139,9 +155,11 @@ export function getThemeFamily(key: ThemeKey | LegacyThemeKey) {
   if (normalized.startsWith('birthday')) return 'birthday';
   if (
     normalized === 'red' ||
+    normalized === 'orange' ||
     normalized === 'yellow' ||
     normalized === 'blue' ||
     normalized === 'green' ||
+    normalized === 'purple' ||
     normalized.startsWith('mono') ||
     normalized === 'midnight'
   )
