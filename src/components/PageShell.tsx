@@ -10,7 +10,7 @@ type PageShellProps = {
 export default function PageShell({
   children,
   background = 'romance',
-  theme = 'mono-light'
+  theme = 'red'
 }: PageShellProps) {
   const bgClass = background === 'sparkles' ? 'bg-sparkles' : 'bg-romance';
 

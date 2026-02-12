@@ -173,7 +173,7 @@ export const THEMES: ThemeDefinition[] = [
   }
 ];
 
-export const DEFAULT_THEME: ThemeKey = 'mono-light';
+export const DEFAULT_THEME: ThemeKey = 'red';
 
 export const THEME_KEYS = THEMES.map((theme) => theme.key);
 
@@ -185,7 +185,7 @@ export function normalizeThemeKey(value?: string): ThemeKey {
   if (!value) return DEFAULT_THEME;
   if (isThemeKey(value)) return value;
   if (value === 'birthday') return 'birthday-neutral';
-  if (value === 'sage' || value.startsWith('sage-')) return 'mono-light';
+  if (value === 'sage' || value.startsWith('sage-')) return 'red';
   if (value === 'primary-red') return 'red';
   if (value === 'primary-blue') return 'blue';
   if (value === 'primary-yellow') return 'yellow';
