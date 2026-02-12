@@ -307,7 +307,7 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
       incrementStat('shares');
       setShareMessage('Link copied.');
     } catch (error) {
-      setShareMessage('Share failed.');
+      setShareMessage('Share unavailable. Copy the URL from your address bar.');
     } finally {
       window.setTimeout(() => setShareMessage(null), 2500);
     }
@@ -431,13 +431,20 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
                 <span className="rounded-full bg-accent-soft-strong px-2.5 py-1 text-xs font-semibold tabular-nums text-accent">
                   {selectedCount}/{REQUIRED_GIFTS}
                 </span>
-                {selectedCount === 1
+                {selectedCount === REQUIRED_GIFTS
+                  ? 'Ready To Confirm'
+                  : selectedCount === 1
                   ? 'Two More'
                   : selectedCount === 2
                     ? 'One More'
                     : 'Make Your Selection'}
               </div>
             </div>
+            {selectedCount === REQUIRED_GIFTS ? (
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-300" aria-live="polite">
+                3 picks selected. Remove one to choose a different gift.
+              </p>
+            ) : null}
             {isSubmitting ? (
               <div className="flex items-center gap-2 text-sm font-semibold text-accent" aria-live="polite">
                 <span className="h-2 w-2 animate-pulse rounded-full bg-accent" />
@@ -526,13 +533,16 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
                         <FontAwesomeIcon icon={faGift} size="lg" aria-hidden="true" />
                       </span>
                       <div className="min-w-0">
-                        <h3 className="break-words text-lg font-semibold text-ink-500">{gift.title}</h3>
+                        <h3 className="recap-gift-title break-words text-lg font-semibold text-ink-500" title={gift.title}>
+                          {gift.title}
+                        </h3>
                         {gift.linkUrl ? (
                           <a
                             href={gift.linkUrl}
                             target="_blank"
                             rel="noreferrer noopener"
                             className="link-soft mt-2 inline-flex items-center gap-2 focus-ring touch-manipulation"
+                            aria-label={`View details for ${gift.title}`}
                           >
                             View Details
                             <FontAwesomeIcon icon={faArrowRight} aria-hidden="true" />
@@ -553,14 +563,16 @@ export default function RecipientFlow({ config, onSubmit, showCreateLink = true 
                 </Button>
                 <Button variant="ghost" size="md" onClick={handleShare}>
                   <FontAwesomeIcon icon={faArrowUpRightFromSquare} aria-hidden="true" />
-                  Share
+                  Share Gift Page
                 </Button>
               </div>
-              {shareMessage ? (
-                <p className="text-xs font-semibold uppercase tracking-[0.22em] text-ink-300" aria-live="polite">
-                  {shareMessage}
-                </p>
-              ) : null}
+              <div className="min-h-6" role="status" aria-live="polite">
+                {shareMessage ? (
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-accent-strong">
+                    {shareMessage}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </div>
         </div>

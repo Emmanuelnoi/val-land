@@ -34,8 +34,12 @@ export default function GiftCard({ gift, onSelect, disabled, isLeaving }: GiftCa
       </div>
       <div className="flex flex-1 flex-col gap-3">
         <div className="space-y-2">
-          <h3 className="break-words text-lg font-semibold text-ink-500">{gift.title}</h3>
-          <p className="break-words text-sm text-ink-300/90">{gift.description}</p>
+          <h3 className="gift-card-title break-words text-lg font-semibold text-ink-500" title={gift.title}>
+            {gift.title}
+          </h3>
+          <p className="gift-card-description break-words text-sm text-ink-300/90" title={gift.description}>
+            {gift.description}
+          </p>
         </div>
         <div className="mt-auto flex flex-wrap items-center gap-3">
           {gift.linkUrl ? (
