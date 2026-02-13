@@ -478,7 +478,11 @@ export default function Create() {
                               </div>
                               <p className="mt-1 text-xs text-ink-300">{theme.description}</p>
                               <div className="mt-3 flex items-center gap-2">
-                                <span className={getThemePreviewClass(theme.key)} aria-hidden="true" />
+                                <span className={getThemePreviewClass(theme.key)} aria-hidden="true">
+                                  <span className="theme-preview-dot" />
+                                  <span className="theme-preview-dot" />
+                                  <span className="theme-preview-dot" />
+                                </span>
                               </div>
                             </button>
                           );
