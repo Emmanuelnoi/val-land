@@ -893,26 +893,6 @@
     background: var(--preview-3, #ffd4b2);
   }
 
-  .theme-preview-chip-valentine { --preview-1: #f05d88; --preview-2: #ff90b3; --preview-3: #ffd4b2; }
-  .theme-preview-chip-sunset-gold { --preview-1: #c95a3c; --preview-2: #f8c777; --preview-3: #5b2a3c; }
-  .theme-preview-chip-peach-cream { --preview-1: #f7b38a; --preview-2: #fff2dd; --preview-3: #a66a4d; }
-  .theme-preview-chip-birthday-neutral { --preview-1: #ff8a5b; --preview-2: #ffd166; --preview-3: #ff6b6b; }
-  .theme-preview-chip-birthday-men { --preview-1: #1f3b5f; --preview-2: #2f5aa6; --preview-3: #f2b03f; }
-  .theme-preview-chip-birthday-women { --preview-1: #f26a8d; --preview-2: #ffd1dc; --preview-3: #c85a84; }
-  .theme-preview-chip-birthday-neon { --preview-1: #1b2a69; --preview-2: #ff4fb8; --preview-3: #28d7ff; }
-  .theme-preview-chip-red { --preview-1: #8f1d2c; --preview-2: #d75c44; --preview-3: #4f0e1d; }
-  .theme-preview-chip-orange { --preview-1: #e26a1c; --preview-2: #ffc48a; --preview-3: #8a3a0f; }
-  .theme-preview-chip-yellow { --preview-1: #d9931a; --preview-2: #ffe3a3; --preview-3: #9a5d12; }
-  .theme-preview-chip-green { --preview-1: #2f8f6b; --preview-2: #a7e2c3; --preview-3: #1f5b46; }
-  .theme-preview-chip-blue { --preview-1: #2f6fb5; --preview-2: #9bd3ff; --preview-3: #1b3458; }
-  .theme-preview-chip-purple { --preview-1: #6c3bb8; --preview-2: #c5a6ff; --preview-3: #3b1a6f; }
-  .theme-preview-chip-ocean-mist { --preview-1: #2c7d8f; --preview-2: #9ddde0; --preview-3: #204956; }
-  .theme-preview-chip-forest-ember { --preview-1: #2f5f47; --preview-2: #d6a76a; --preview-3: #5b2f24; }
-  .theme-preview-chip-mono-dark { --preview-1: #1f1f25; --preview-2: #b9a07a; --preview-3: #4b4b57; }
-  .theme-preview-chip-mono-light { --preview-1: #b7bcc5; --preview-2: #f2f4f7; --preview-3: #7d8590; }
-  .theme-preview-chip-lavender-noir { --preview-1: #171227; --preview-2: #b493ff; --preview-3: #2f2448; }
-  .theme-preview-chip-midnight { --preview-1: #0c111c; --preview-2: #6dd3d6; --preview-3: #1c2433; }
-
   [data-theme="midnight"] {
     color: #e8edf5;
   }

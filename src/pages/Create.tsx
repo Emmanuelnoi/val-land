@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { CSSProperties, FormEvent } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faArrowRight,
@@ -120,8 +120,12 @@ function isPublicHttpsUrl(value: string) {
   }
 }
 
-function getThemePreviewClass(themeKey: ThemeKey) {
-  return `theme-preview-chip theme-preview-chip-${themeKey}`;
+function getThemePreviewStyle(preview: string[]): CSSProperties {
+  return {
+    '--preview-1': preview[0],
+    '--preview-2': preview[1],
+    '--preview-3': preview[2]
+  } as CSSProperties;
 }
 
 function toCreateErrorMessage(error: string) {
@@ -478,7 +482,11 @@ export default function Create() {
                               </div>
                               <p className="mt-1 text-xs text-ink-300">{theme.description}</p>
                               <div className="mt-3 flex items-center gap-2">
-                                <span className={getThemePreviewClass(theme.key)} aria-hidden="true">
+                                <span
+                                  className="theme-preview-chip"
+                                  style={getThemePreviewStyle(theme.preview)}
+                                  aria-hidden="true"
+                                >
                                   <span className="theme-preview-dot" />
                                   <span className="theme-preview-dot" />
                                   <span className="theme-preview-dot" />
