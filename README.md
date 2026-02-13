@@ -23,6 +23,14 @@ For local API testing, run the serverless functions:
 npm run dev:api
 ```
 
+Useful checks:
+
+```bash
+npm run test:run
+npm run test:contract
+npm run build
+```
+
 ## Creator Flow
 
 1. Visit `/create`, choose a theme, and fill in the recipient name, message, and gifts.
@@ -100,8 +108,19 @@ It validates input, rate limits requests, and sends a Discord embed notification
 - `POST /api/submit`
 - `POST /api/results` with JSON body `{ "slug": "...", "key": "..." }`
 - `GET /api/health/kv` (connectivity check)
+- `POST /api/telemetry` (client diagnostics: challenge/CSP/image errors)
 
 ### Security Notes
 
 - Creator webhooks are encrypted before storage and decrypted server-side only when dispatching notifications.
 - Admin tokens are hashed in storage (tokens are returned only once).
+- API and client diagnostics are emitted as structured events for challenge, webhook, CSP, and image-load failures.
+
+## Engineering Ops Docs
+
+- `docs/ops/kpi-slo-scorecard.md`
+- `docs/adr/0001-external-image-delivery-csp.md`
+- `docs/security/threat-model.md`
+- `docs/roadmap/engineering-roadmap-2026.md`
+- `docs/runbooks/release-checklist.md`
+- `docs/runbooks/incident-operations.md`

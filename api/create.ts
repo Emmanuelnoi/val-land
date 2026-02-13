@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { kvGet, kvSet } from '../src/server/kv.js';
+import { logApiEvent } from '../src/server/observability.js';
 import {
   createRateLimiter,
   encryptSecret,
@@ -118,18 +119,21 @@ function normalizeGift(gift: IncomingGift, index: number): Gift | null {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
+    logApiEvent(req, 'create.method_not_allowed', {}, 'warn');
     res.status(405).json({ ok: false, error: 'Method not allowed' });
     return;
   }
   res.setHeader('Cache-Control', 'no-store, private, max-age=0');
 
   if (!hasValidChallenge(req)) {
+    logApiEvent(req, 'create.challenge_failed', {}, 'warn');
     res.status(403).json({ ok: false, error: 'Challenge failed' });
     return;
   }
 
   const rate = await limiter(getClientIp(req));
   if (rate.limited) {
+    logApiEvent(req, 'create.rate_limited', { retryAfter: rate.retryAfter }, 'warn');
     res.setHeader('Retry-After', rate.retryAfter.toString());
     res.status(429).json({ ok: false, error: 'Rate limit exceeded' });
     return;
@@ -137,6 +141,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const parsed = parsePayload(req.body);
   if (!parsed) {
+    logApiEvent(req, 'create.invalid_payload', {}, 'warn');
     res.status(400).json({ ok: false, error: 'Invalid payload' });
     return;
   }
@@ -146,12 +151,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const theme: ThemeKey = normalizeThemeKey(parsed.theme);
 
   if (!toName || !message) {
+    logApiEvent(req, 'create.missing_required_fields', {}, 'warn');
     res.status(400).json({ ok: false, error: 'Name and message are required' });
     return;
   }
 
   const giftsInput = Array.isArray(parsed.gifts) ? parsed.gifts : [];
   if (giftsInput.length < 3 || giftsInput.length > 12) {
+    logApiEvent(req, 'create.invalid_gift_count', { giftCount: giftsInput.length }, 'warn');
     res.status(400).json({ ok: false, error: 'Gifts must be between 3 and 12' });
     return;
   }
@@ -160,6 +167,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   for (let i = 0; i < giftsInput.length; i += 1) {
     const normalized = normalizeGift(giftsInput[i], i);
     if (!normalized) {
+      logApiEvent(req, 'create.invalid_gift_data', { giftIndex: i }, 'warn');
       res.status(400).json({ ok: false, error: 'Invalid gift data' });
       return;
     }
@@ -170,11 +178,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (parsed.creatorDiscordWebhookUrl) {
     const webhook = sanitizeUrl(parsed.creatorDiscordWebhookUrl);
     if (!webhook || !isDiscordWebhook(webhook)) {
+      logApiEvent(req, 'create.invalid_discord_webhook', {}, 'warn');
       res.status(400).json({ ok: false, error: 'Invalid Discord webhook URL' });
       return;
     }
     const webhookCiphertext = encryptSecret(webhook);
     if (!webhookCiphertext) {
+      logApiEvent(req, 'create.webhook_encryption_not_configured', {}, 'error');
       res.status(500).json({ ok: false, error: 'Server not configured' });
       return;
     }
@@ -197,6 +207,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (!slug) {
+      logApiEvent(req, 'create.slug_generation_failed', {}, 'error');
       res.status(500).json({ ok: false, error: 'Unable to create slug' });
       return;
     }
@@ -214,10 +225,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     await kvSet(`val:subs:${slug}`, []);
   } catch (error) {
+    logApiEvent(req, 'create.kv_error', {}, 'error');
     res.status(500).json({ ok: false, error: 'KV not configured' });
     return;
   }
 
+  logApiEvent(req, 'create.success', {
+    slug,
+    theme,
+    giftCount: gifts.length,
+    creatorNotifyEnabled: Boolean(creatorNotify)
+  });
   res.status(200).json({
     ok: true,
     slug,

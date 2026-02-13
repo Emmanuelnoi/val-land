@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import crypto from 'node:crypto';
 import { kvAppend, kvGet, kvSet } from '../src/server/kv.js';
+import { logApiEvent } from '../src/server/observability.js';
 import {
   createRateLimiter,
   decryptSecret,
@@ -80,17 +81,20 @@ function pickGift(configGifts: Gift[], id: string): SelectedGift | null {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
+    logApiEvent(req, 'submit.method_not_allowed', {}, 'warn');
     res.status(405).json({ ok: false, error: 'Method not allowed' });
     return;
   }
 
   if (!hasValidChallenge(req)) {
+    logApiEvent(req, 'submit.challenge_failed', {}, 'warn');
     res.status(403).json({ ok: false, error: 'Challenge failed' });
     return;
   }
 
   const rate = await limiter(getClientIp(req));
   if (rate.limited) {
+    logApiEvent(req, 'submit.rate_limited', { retryAfter: rate.retryAfter }, 'warn');
     res.setHeader('Retry-After', rate.retryAfter.toString());
     res.status(429).json({ ok: false, error: 'Rate limit exceeded' });
     return;
@@ -98,18 +102,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const parsed = parsePayload(req.body);
   if (!parsed) {
+    logApiEvent(req, 'submit.invalid_payload', {}, 'warn');
     res.status(400).json({ ok: false, error: 'Invalid payload' });
     return;
   }
 
   const slug = typeof parsed.slug === 'string' ? parsed.slug : '';
   if (!isValidSlug(slug)) {
+    logApiEvent(req, 'submit.invalid_slug', {}, 'warn');
     res.status(400).json({ ok: false, error: 'Invalid slug' });
     return;
   }
 
   const picks = Array.isArray(parsed.pickedGifts) ? parsed.pickedGifts : [];
   if (picks.length !== 3) {
+    logApiEvent(req, 'submit.invalid_pick_count', { pickCount: picks.length }, 'warn');
     res.status(400).json({ ok: false, error: 'Exactly three gifts are required' });
     return;
   }
@@ -126,11 +133,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     config = await kvGet(`val:cfg:${slug}`);
   } catch (error) {
+    logApiEvent(req, 'submit.kv_read_error', { slug }, 'error');
     res.status(500).json({ ok: false, error: 'KV not configured' });
     return;
   }
 
   if (!config) {
+    logApiEvent(req, 'submit.config_not_found', { slug }, 'warn');
     res.status(404).json({ ok: false, error: 'Config not found' });
     return;
   }
@@ -140,10 +149,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const id = sanitizeText(toSafeString(pick?.id), 40);
     const gift = id ? pickGift(config.gifts, id) : null;
     if (!gift) {
+      logApiEvent(req, 'submit.invalid_gift_selection', { slug }, 'warn');
       res.status(400).json({ ok: false, error: 'Invalid gift selection' });
       return;
     }
     if (pickedGifts.some((existing) => existing.id === gift.id)) {
+      logApiEvent(req, 'submit.duplicate_gifts', { slug }, 'warn');
       res.status(400).json({ ok: false, error: 'Duplicate gifts not allowed' });
       return;
     }
@@ -159,6 +170,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     await kvAppend(`val:subs:${slug}`, submission);
   } catch (error) {
+    logApiEvent(req, 'submit.kv_write_error', { slug }, 'error');
     res.status(500).json({ ok: false, error: 'KV not configured' });
     return;
   }
@@ -185,7 +197,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (creatorWebhookUrl) {
     const [gift1, gift2, gift3] = pickedGifts;
-    await fetchWithTimeout(
+    const webhookResponse = await fetchWithTimeout(
       creatorWebhookUrl,
       {
         method: 'POST',
@@ -230,7 +242,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       },
       5000
     ).catch(() => null);
+
+    if (!webhookResponse || !webhookResponse.ok) {
+      logApiEvent(
+        req,
+        'submit.creator_webhook_failed',
+        {
+          slug,
+          status: webhookResponse?.status ?? 'network_error'
+        },
+        'warn'
+      );
+    } else {
+      logApiEvent(req, 'submit.creator_webhook_sent', { slug, status: webhookResponse.status });
+    }
   }
 
+  logApiEvent(req, 'submit.success', { slug, pickCount: pickedGifts.length });
   res.status(200).json({ ok: true });
 }

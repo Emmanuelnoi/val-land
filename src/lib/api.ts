@@ -7,6 +7,7 @@ import type {
   ValentineSubmission
 } from './types';
 import type { ThemeKey } from './themes';
+import { trackClientEvent } from './telemetry';
 
 export type SubmitResult = { ok: true } | { ok: false; error: string };
 
@@ -46,6 +47,11 @@ async function getChallengeHeader(): Promise<Record<string, string>> {
     const response = await fetch('/api/challenge');
     const data = (await response.json().catch(() => ({}))) as ChallengeApiResult;
     if (!response.ok || !data.ok || typeof data.challenge !== 'string' || data.challenge.length === 0) {
+      trackClientEvent('challenge_fetch_failed_client', {
+        endpoint: '/api/challenge',
+        status: response.status,
+        reason: 'invalid_challenge_response'
+      });
       return {};
     }
 
@@ -56,6 +62,10 @@ async function getChallengeHeader(): Promise<Record<string, string>> {
     };
     return { 'x-app-challenge': data.challenge };
   } catch (error) {
+    trackClientEvent('challenge_fetch_failed_client', {
+      endpoint: '/api/challenge',
+      reason: 'network_error'
+    });
     return {};
   }
 }
@@ -77,6 +87,12 @@ export async function submitSelection(
     };
 
     if (!response.ok || !data.ok) {
+      if (response.status === 403 && data.error === 'Challenge failed') {
+        trackClientEvent('challenge_failed_client', {
+          endpoint: '/api/valentine',
+          status: response.status
+        });
+      }
       return {
         ok: false,
         error: data.error ?? 'Submission failed'
@@ -109,6 +125,12 @@ export async function createValentine(
     };
 
     if (!response.ok || !data.ok) {
+      if (response.status === 403 && data.error === 'Challenge failed') {
+        trackClientEvent('challenge_failed_client', {
+          endpoint: '/api/create',
+          status: response.status
+        });
+      }
       return { ok: false, error: data.error ?? 'Failed to create gift page' };
     }
 
@@ -167,6 +189,12 @@ export async function submitBySlug(
     const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
 
     if (!response.ok || !data.ok) {
+      if (response.status === 403 && data.error === 'Challenge failed') {
+        trackClientEvent('challenge_failed_client', {
+          endpoint: '/api/submit',
+          status: response.status
+        });
+      }
       return { ok: false, error: data.error ?? 'Submission failed' };
     }
 

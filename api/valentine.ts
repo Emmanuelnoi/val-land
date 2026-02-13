@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { logApiEvent } from '../src/server/observability.js';
 import {
   createRateLimiter,
   getClientIp,
@@ -56,17 +57,20 @@ function parsePayload(body: unknown): IncomingPayload | null {
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
+    logApiEvent(req, 'legacy_submit.method_not_allowed', {}, 'warn');
     res.status(405).json({ ok: false, error: 'Method not allowed' });
     return;
   }
 
   if (!hasValidChallenge(req)) {
+    logApiEvent(req, 'legacy_submit.challenge_failed', {}, 'warn');
     res.status(403).json({ ok: false, error: 'Challenge failed' });
     return;
   }
 
   const parsed = parsePayload(req.body);
   if (!parsed) {
+    logApiEvent(req, 'legacy_submit.invalid_payload', {}, 'warn');
     res.status(400).json({ ok: false, error: 'Invalid payload' });
     return;
   }
@@ -74,6 +78,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const ip = getClientIp(req);
   const rate = await limiter(ip);
   if (rate.limited) {
+    logApiEvent(req, 'legacy_submit.rate_limited', { retryAfter: rate.retryAfter }, 'warn');
     res.setHeader('Retry-After', rate.retryAfter.toString());
     res.status(429).json({ ok: false, error: 'Rate limit exceeded' });
     return;
@@ -84,6 +89,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const gifts = Array.isArray(parsed.gifts) ? parsed.gifts : [];
   if (gifts.length !== 3) {
+    logApiEvent(req, 'legacy_submit.invalid_gift_count', { giftCount: gifts.length }, 'warn');
     res.status(400).json({ ok: false, error: 'Exactly three gifts are required' });
     return;
   }
@@ -104,6 +110,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
   if (!webhookUrl || !isDiscordWebhook(webhookUrl)) {
+    logApiEvent(req, 'legacy_submit.webhook_not_configured', {}, 'error');
     res.status(500).json({ ok: false, error: 'Server not configured' });
     return;
   }
@@ -164,12 +171,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     );
 
     if (!response.ok) {
+      logApiEvent(
+        req,
+        'legacy_submit.webhook_failed',
+        { status: response.status, statusText: response.statusText },
+        'warn'
+      );
       res.status(502).json({ ok: false, error: 'Webhook request failed' });
       return;
     }
 
+    logApiEvent(req, 'legacy_submit.success');
     res.status(200).json({ ok: true });
   } catch (error) {
+    logApiEvent(req, 'legacy_submit.server_error', {}, 'error');
     res.status(500).json({ ok: false, error: 'Server error' });
   }
 }

@@ -568,4 +568,40 @@ describe('creator flow api', () => {
     expect(res.statusCode).toBe(200);
     expect(res.jsonBody).toMatchObject({ ok: true });
   });
+
+  it('accepts whitelisted client telemetry events', async () => {
+    const handler = (await import('../../api/telemetry')).default;
+    const req = {
+      method: 'POST',
+      headers: { 'x-forwarded-for': '9.9.9.9' },
+      body: {
+        event: 'csp_violation_client',
+        page: '/create',
+        directive: 'img-src',
+        blockedHost: 'example.com'
+      }
+    } as unknown as VercelRequest;
+    const res = createMockRes();
+
+    await handler(req, res);
+    expect(res.statusCode).toBe(202);
+    expect(res.jsonBody).toMatchObject({ ok: true });
+  });
+
+  it('rejects unknown client telemetry events', async () => {
+    const handler = (await import('../../api/telemetry')).default;
+    const req = {
+      method: 'POST',
+      headers: { 'x-forwarded-for': '9.9.9.9' },
+      body: {
+        event: 'totally_unknown_event',
+        page: '/create'
+      }
+    } as unknown as VercelRequest;
+    const res = createMockRes();
+
+    await handler(req, res);
+    expect(res.statusCode).toBe(400);
+    expect(res.jsonBody).toMatchObject({ ok: false, error: 'Invalid payload' });
+  });
 });

@@ -17,27 +17,23 @@ import Button from '../components/Button';
 import Card from '../components/Card';
 import { Link } from '../router';
 import { createValentine } from '../lib/api';
+import {
+  MAX_DESCRIPTION,
+  MAX_GIFTS,
+  MAX_MESSAGE,
+  MAX_NAME,
+  MAX_TITLE,
+  type FieldErrors,
+  MIN_GIFTS,
+  isPublicHttpsUrl,
+  validateCreateForm
+} from '../lib/create-validation';
 import { DEFAULT_THEME, THEMES, getThemeFamily, normalizeThemeKey } from '../lib/themes';
 import type { ThemeKey } from '../lib/themes';
 import type { Gift, ValentineCreatePayload, ValentineCreateResult } from '../lib/types';
 import { useTheme } from '../theme';
 
 type GiftForm = Gift & { formId: string };
-
-type FieldErrors = {
-  toName?: string;
-  message?: string;
-  gifts?: string;
-  creatorDiscordWebhookUrl?: string;
-  giftErrors: Record<string, Partial<Record<'title' | 'description' | 'imageUrl' | 'linkUrl', string>>>;
-};
-
-const MAX_GIFTS = 12;
-const MIN_GIFTS = 3;
-const MAX_NAME = 60;
-const MAX_MESSAGE = 180;
-const MAX_TITLE = 60;
-const MAX_DESCRIPTION = 140;
 
 type ThemeGroupId = 'valentine' | 'birthday' | 'colors' | 'mono';
 const THEME_GROUP_IDS: ThemeGroupId[] = ['valentine', 'birthday', 'colors', 'mono'];
@@ -97,27 +93,6 @@ function createGiftForm(): GiftForm {
     imageUrl: '',
     linkUrl: ''
   };
-}
-
-function isPublicHttpsUrl(value: string) {
-  if (!value) return false;
-  try {
-    const url = new URL(value);
-    if (url.protocol !== 'https:') return false;
-    const hostname = url.hostname.toLowerCase();
-    if (
-      hostname === 'localhost' ||
-      hostname.endsWith('.localhost') ||
-      hostname.endsWith('.local') ||
-      hostname === '127.0.0.1' ||
-      hostname === '::1'
-    ) {
-      return false;
-    }
-    return true;
-  } catch (error) {
-    return false;
-  }
 }
 
 function getThemePreviewStyle(preview: string[]): CSSProperties {
@@ -268,44 +243,12 @@ export default function Create() {
   }, [hasUnsavedChanges]);
 
   const validate = () => {
-    const nextErrors: FieldErrors = { giftErrors: {} };
-    if (!toName.trim()) nextErrors.toName = 'Please enter a name.';
-    if (toName.trim().length > MAX_NAME) nextErrors.toName = `Keep it under ${MAX_NAME} characters.`;
-    if (!message.trim()) nextErrors.message = 'Please add a short message.';
-    if (message.trim().length > MAX_MESSAGE) nextErrors.message = `Keep it under ${MAX_MESSAGE} characters.`;
-    if (gifts.length < MIN_GIFTS) nextErrors.gifts = `Add at least ${MIN_GIFTS} gifts.`;
-    if (gifts.length > MAX_GIFTS) nextErrors.gifts = `Limit gifts to ${MAX_GIFTS}.`;
-
-    if (discordWebhook.trim()) {
-      const trimmed = discordWebhook.trim();
-      const allowed =
-        trimmed.startsWith('https://discord.com/api/webhooks/') ||
-        trimmed.startsWith('https://discordapp.com/api/webhooks/');
-      if (!allowed) {
-        nextErrors.creatorDiscordWebhookUrl =
-          'Webhook must start with https://discord.com/api/webhooks/.';
-      }
-    }
-
-    gifts.forEach((gift) => {
-      const giftErrors: FieldErrors['giftErrors'][string] = {};
-      const trimmedImageUrl = gift.imageUrl.trim();
-      const trimmedLinkUrl = gift.linkUrl?.trim() ?? '';
-      if (!gift.title.trim()) giftErrors.title = 'Title is required.';
-      if (gift.title.length > MAX_TITLE) giftErrors.title = `Max ${MAX_TITLE} characters.`;
-      if (!gift.description.trim()) giftErrors.description = 'Description is required.';
-      if (gift.description.length > MAX_DESCRIPTION)
-        giftErrors.description = `Max ${MAX_DESCRIPTION} characters.`;
-      if (!trimmedImageUrl) giftErrors.imageUrl = 'Image URL is required.';
-      if (trimmedImageUrl && !isPublicHttpsUrl(trimmedImageUrl))
-        giftErrors.imageUrl = 'Use a valid public https URL.';
-      if (trimmedLinkUrl && !isPublicHttpsUrl(trimmedLinkUrl))
-        giftErrors.linkUrl = 'Use a valid public https URL.';
-      if (Object.keys(giftErrors).length > 0) {
-        nextErrors.giftErrors[gift.formId] = giftErrors;
-      }
+    const nextErrors = validateCreateForm({
+      toName,
+      message,
+      gifts,
+      discordWebhook
     });
-
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 1 && Object.keys(nextErrors.giftErrors).length === 0;
   };

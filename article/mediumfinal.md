@@ -1,59 +1,55 @@
 # I Built an App So I’d Never Have to Ask “What Gift Do You Want?” Again
 
-Gift-giving has always been stressful for one reason: asking.
+Gift-giving stressed me out for one reason: asking.
 
-"What do you want?" should be easy. For me, it never is.
+“What do you want?” sounds simple. For me, it never was.
 
-I overthink tone, timing, and whether it ruins the surprise. So I do what many quiet overthinkers do: I guess.
+As an introvert, I overthink tone, timing, and whether the question kills the surprise. So I’d guess. Sometimes I got it right. Sometimes I got the polite smile.
 
-Sometimes the guess works.
+After enough misses, I stopped treating this as personality and treated it as architecture.
 
-Sometimes it gets the polite smile.
+Could I design a flow that keeps care, keeps surprise, and removes the awkward preference interview?
 
-After enough misses, I stopped treating this as a personality quirk and treated it as a systems problem.
+That became **Gift-land**.
 
-Could I design a flow that keeps the care, keeps the surprise energy, and removes the awkward preference interview?
+## The Product Loop Was Tiny, But Non-Negotiable
 
-That question became **Gift-land**.
+I didn’t want a huge app.
 
-## The Real Problem Was Friction
+I wanted one reliable loop:
 
-I didn’t want a big app.
-
-I wanted one loop:
-
-1. Creator curates a short gift list.
+1. Creator curates a short list.
 2. Creator shares one link.
 3. Recipient picks exactly 3 gifts.
 4. Creator gets private results.
 
-Emotionally, this preserves thoughtfulness.
+Emotionally, it keeps the gesture personal.
 
-Technically, it converts ambiguity into a clear contract.
+Technically, it turns ambiguity into a contract.
 
-## The Side-Project Stack That Let Me Ship
-
-I chose tools I can maintain alone:
+## Stack I Could Operate Alone
 
 - React + TypeScript + Vite
 - Tailwind CSS
 - Vercel serverless functions
 - Upstash Redis
-- Discord webhooks
-- Vitest
+- Discord webhooks (optional creator notify)
+- Vitest + CI
 
-No heroics.
+No fancy platform story.
 
-Just a reliable stack with fast iteration and understandable failure modes.
+Just tools I can debug at 1am.
 
-## Architecture: Small Surface, Hard Boundaries
+## Architecture First, UI Second
 
 ```mermaid
 flowchart LR
   A[Creator UI] -->|POST /api/create| B[Vercel create]
   C[Recipient UI] -->|GET /api/config| D[Vercel config]
   C -->|POST /api/submit| E[Vercel submit]
-  F[Results UI] -->|GET /api/results| G[Vercel results]
+  F[Results UI] -->|POST /api/results| G[Vercel results]
+  A -->|POST /api/telemetry| T[Vercel telemetry]
+  C -->|POST /api/telemetry| T
 
   B --> H[(Upstash Redis)]
   D --> H
@@ -63,169 +59,161 @@ flowchart LR
   E --> I[Discord Webhook Optional]
 ```
 
-The diagram matters less than the boundaries:
+The boundaries matter more than the components:
 
-- `api/config` returns recipient-safe public data only
-- `api/results` returns creator-private data only after key verification
-- `api/submit` enforces domain invariants (exactly 3 unique picks)
+- `api/config` only returns recipient-safe data.
+- `api/results` is private and key-verified.
+- `api/submit` enforces domain invariants (exactly 3 unique picks).
+- `api/telemetry` only accepts whitelisted client diagnostics events.
 
-That’s a senior-engineering habit I trust: put boundaries in API design first, not in scattered conditionals later.
+## Post-Launch Hardening: What Changed
 
-## Security Baseline: Defensible, Not Just Hidden
+Shipping the first version was step one.
 
-Private results should be private by design.
+The real work was hardening trust.
 
-When a page is created, I issue an admin token once and store only the hash.
+### 1) Signed anti-abuse challenges
+
+Instead of trusting a static client header, clients fetch a short-lived signed challenge from `GET /api/challenge`.
+
+```ts
+// src/lib/api.ts
+const response = await fetch('/api/challenge');
+if (!response.ok || !data.ok || typeof data.challenge !== 'string') return {};
+return { 'x-app-challenge': data.challenge };
+```
+
+That challenge is verified server-side with IP + user-agent binding and expiration checks.
+
+### 2) Structured server observability
+
+I added structured API events across create/submit/challenge/legacy-submit so failures are queryable instead of anecdotal.
+
+```ts
+// api/submit.ts
+logApiEvent(req, 'submit.creator_webhook_failed', {
+  slug,
+  status: webhookResponse?.status ?? 'network_error'
+}, 'warn');
+```
+
+### 3) Client diagnostics for real production pain
+
+The browser now reports:
+
+- challenge failures
+- CSP violations
+- image load failures
+
+That data flows into `POST /api/telemetry` with event allowlisting and rate limits.
+
+### 4) Domain logic extracted from page code
+
+I pulled create-form validation rules into a dedicated module so UI doesn’t own business invariants.
+
+It’s a small refactor, but it lowers future change risk.
+
+### 5) CI now gates contract behavior
+
+I added a dedicated contract test target for creator flow, and CI runs it explicitly.
+
+That catches security/regression drift before deploy.
+
+## Security Model: Practical but Serious
+
+Private results are protected by one-time token issuance with hash-only storage.
 
 ```ts
 // api/create.ts
 const adminToken = generateToken(32);
 const adminTokenHash = hashToken(adminToken);
-
-await kvSet(`val:cfg:${slug}`, {
-  slug,
-  toName,
-  message,
-  gifts,
-  creatorNotify,
-  createdAt,
-  adminTokenHash,
-  theme
-});
 ```
 
-On read, incoming key is hashed and compared with timing-safe equality.
+Webhook URLs are encrypted before storage, not kept as plaintext in KV.
 
-```ts
-// api/results.ts
-const hashed = hashToken(key);
-if (!timingSafeEqualHex(config.adminTokenHash, hashed)) {
-  res.status(401).json({ ok: false, error: 'Invalid or missing key' });
-  return;
-}
-```
+Rate limiting is hybrid:
 
-This gives strong protection for a side project without pulling in a full auth system.
+- shared (Redis-backed) when available
+- local fallback
+- fail-closed in production on backend limiter failure where configured
 
-## Domain Rules Belong on the Server
-
-UI rules are convenience.
-
-API rules are truth.
-
-```ts
-// api/submit.ts
-if (picks.length !== 3) {
-  res.status(400).json({ ok: false, error: 'Exactly three gifts are required' });
-  return;
-}
-
-if (pickedGifts.some((existing) => existing.id === gift.id)) {
-  res.status(400).json({ ok: false, error: 'Duplicate gifts not allowed' });
-  return;
-}
-```
-
-That keeps behavior stable even as clients evolve.
-
-## Reliability: Preserve Intent When Networks Fail
-
-I stopped treating submission as one request/response event.
-
-I treated it as a retriable workflow.
-
-```ts
-// src/lib/submission-queue.ts
-function getBackoffDelayMs(attempts: number, options?: QueueOptions) {
-  const base = options?.baseDelayMs ?? 20_000;
-  const max = options?.maxDelayMs ?? 5 * 60_000;
-  const delay = base * Math.pow(2, Math.max(0, attempts - 1));
-  return Math.min(delay, max);
-}
-```
-
-A local retry queue with exponential backoff means transient failures degrade to delayed success, not silent loss.
+That’s the difference between “works locally” and “defensible in prod.”
 
 ## End-to-End Flow
 
 ```mermaid
 sequenceDiagram
   participant C as Creator
+  participant CH as /api/challenge
   participant API as /api/create
   participant KV as Redis
   participant R as Recipient
   participant S as /api/submit
+  participant TEL as /api/telemetry
 
-  C->>API: Create page + gifts + theme
+  C->>CH: Request signed challenge
+  CH-->>C: challenge token
+  C->>API: Create page + challenge
   API->>KV: Save config + hashed admin token
   API-->>C: shareUrl + private resultsUrl
   C->>R: Send shareUrl
-  R->>S: Pick 3 gifts
+  R->>S: Pick 3 gifts + challenge
   S->>KV: Save submission
   S-->>C: Optional Discord notification
+  R->>TEL: CSP/image failure telemetry (if any)
 ```
-
-For me, this changed the emotional dynamic.
-
-I no longer force a conversation style that drains me.
-
-I can still be thoughtful.
-
-The recipient still has control.
 
 ## Tradeoffs I Made on Purpose
 
-Every side-project architecture is a compromise set.
+Every side project is a tradeoff set, not a purity contest.
 
-1. **In-memory rate limiting in functions**  
-Simple and fast, but not globally consistent across instances. If traffic grows, move this to Redis.
+1. **Direct third-party image loading (`img-src https:`)**  
+   Maximum creator flexibility, but less control than a proxy/CDN model.
 
-2. **Array-based submission storage**  
-Easy append/read model now, weaker for analytics-heavy querying later.
+2. **Redis + in-memory limiter fallback**  
+   Good resilience and speed, but still operationally simpler than full global abuse infra.
 
-3. **Custom client router**  
-Great for four route states, less great once routing complexity expands.
+3. **Array-based submission persistence**  
+   Fast append/read path now, weaker for advanced analytics later.
 
-4. **Discord as notification channel**  
-Fast to implement, but channel-coupled.
+4. **Discord as the first-class notify channel**  
+   Practical and fast, but channel-coupled by design.
 
-Tradeoffs are not failures.
+I documented these tradeoffs in an ADR, then added KPI/SLO tracking, a threat model, and runbooks so decisions stay explicit as the project grows.
 
-They are scope decisions with migration paths.
+## What I Learned Building This
 
-## What I Learned (As An Engineer, Not Just A Builder)
+For products with emotional stakes, reliability is part of UX.
 
-Emotional products fail for technical reasons.
+If challenge flow breaks, people assume the product is flaky.
 
-If private links leak, trust dies.
-If submissions disappear, trust dies.
-If rules are inconsistent, trust dies.
+If image previews fail silently, confidence drops before they even click submit.
 
-The biggest win was writing non-negotiable invariants early:
+If result privacy is weak, the whole experience feels unsafe.
 
-- results require key verification
-- config cannot leak private fields
-- submissions must be exactly 3 unique picks
-- failures retry instead of dropping intent
+The biggest engineering shift was treating this side project like an operated system, not a code artifact:
 
-Once those were explicit, everything got easier.
+- observability signals with action paths
+- contract tests in CI
+- explicit SLOs and error budgets
+- documented incident and rollback playbooks
 
-API design got cleaner.
-Tests got sharper.
-UI behavior got more predictable.
+That’s the part I wish more “build in public” posts emphasized.
 
-The lesson for me: senior engineering on side projects is less about “advanced architecture” and more about disciplined boundaries.
+Shipping is moment one.
+
+Operating is the real product.
 
 ## Closing
 
 Gift-land started as a workaround for my own social friction.
 
-Now it helps me give better without forcing awkward conversations.
+Now it helps me stay thoughtful without forcing the kind of conversation that drains me.
 
-If you’re building a side project, start with friction you actually live with.
+If you’re building your own side project, start from friction you genuinely live with.
 
-Then engineer trust as carefully as you engineer features.
+Then design for trust, and keep hardening after launch.
 
-People remember how your product made them feel.
+People don’t remember your stack.
 
-They keep using it when the system proves it deserves that trust.
+They remember whether your system kept its promise.
